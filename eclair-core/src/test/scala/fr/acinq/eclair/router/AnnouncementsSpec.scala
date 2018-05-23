@@ -41,9 +41,9 @@ class AnnouncementsSpec extends FunSuite {
 
   test("create valid signed channel announcement") {
     val (node_a, node_b, bitcoin_a, bitcoin_b) = (randomKey, randomKey, randomKey, randomKey)
-    val (node_a_sig, bitcoin_a_sig) = signChannelAnnouncement(Block.RegtestGenesisBlock.hash, ShortChannelId(42L), node_a, node_b.publicKey, bitcoin_a, bitcoin_b.publicKey, "")
-    val (node_b_sig, bitcoin_b_sig) = signChannelAnnouncement(Block.RegtestGenesisBlock.hash, ShortChannelId(42L), node_b, node_a.publicKey, bitcoin_b, bitcoin_a.publicKey, "")
-    val ann = makeChannelAnnouncement(Block.RegtestGenesisBlock.hash, ShortChannelId(42L), node_a.publicKey, node_b.publicKey, bitcoin_a.publicKey, bitcoin_b.publicKey, node_a_sig, node_b_sig, bitcoin_a_sig, bitcoin_b_sig)
+    val (node_a_sig, bitcoin_a_sig) = signChannelAnnouncement(Block.BCARegtestForkBlockHash, ShortChannelId(42L), node_a, node_b.publicKey, bitcoin_a, bitcoin_b.publicKey, "")
+    val (node_b_sig, bitcoin_b_sig) = signChannelAnnouncement(Block.BCARegtestForkBlockHash, ShortChannelId(42L), node_b, node_a.publicKey, bitcoin_b, bitcoin_a.publicKey, "")
+    val ann = makeChannelAnnouncement(Block.BCARegtestForkBlockHash, ShortChannelId(42L), node_a.publicKey, node_b.publicKey, bitcoin_a.publicKey, bitcoin_b.publicKey, node_a_sig, node_b_sig, bitcoin_a_sig, bitcoin_b_sig)
     assert(checkSigs(ann))
     assert(checkSigs(ann.copy(nodeId1 = randomKey.publicKey)) === false)
   }
@@ -55,7 +55,7 @@ class AnnouncementsSpec extends FunSuite {
   }
 
   test("create valid signed channel update announcement") {
-    val ann = makeChannelUpdate(Block.RegtestGenesisBlock.hash, Alice.nodeParams.privateKey, randomKey.publicKey, ShortChannelId(45561L), Alice.nodeParams.expiryDeltaBlocks, Alice.nodeParams.htlcMinimumMsat, Alice.nodeParams.feeBaseMsat, Alice.nodeParams.feeProportionalMillionth)
+    val ann = makeChannelUpdate(Block.BCARegtestForkBlockHash, Alice.nodeParams.privateKey, randomKey.publicKey, ShortChannelId(45561L), Alice.nodeParams.expiryDeltaBlocks, Alice.nodeParams.htlcMinimumMsat, Alice.nodeParams.feeBaseMsat, Alice.nodeParams.feeProportionalMillionth)
     assert(checkSig(ann, Alice.nodeParams.nodeId))
     assert(checkSig(ann, randomKey.publicKey) === false)
   }
@@ -66,10 +66,10 @@ class AnnouncementsSpec extends FunSuite {
     // NB: node1 < node2 (public keys)
     assert(isNode1(node1_priv.publicKey.toBin, node2_priv.publicKey.toBin))
     assert(!isNode1(node2_priv.publicKey.toBin, node1_priv.publicKey.toBin))
-    val channelUpdate1 = makeChannelUpdate(Block.RegtestGenesisBlock.hash, node1_priv, node2_priv.publicKey, ShortChannelId(0), 0, 0, 0, 0, enable = true)
-    val channelUpdate1_disabled = makeChannelUpdate(Block.RegtestGenesisBlock.hash, node1_priv, node2_priv.publicKey, ShortChannelId(0), 0, 0, 0, 0, enable = false)
-    val channelUpdate2 = makeChannelUpdate(Block.RegtestGenesisBlock.hash, node2_priv, node1_priv.publicKey, ShortChannelId(0), 0, 0, 0, 0, enable = true)
-    val channelUpdate2_disabled = makeChannelUpdate(Block.RegtestGenesisBlock.hash, node2_priv, node1_priv.publicKey, ShortChannelId(0), 0, 0, 0, 0, enable = false)
+    val channelUpdate1 = makeChannelUpdate(Block.BCARegtestForkBlockHash, node1_priv, node2_priv.publicKey, ShortChannelId(0), 0, 0, 0, 0, enable = true)
+    val channelUpdate1_disabled = makeChannelUpdate(Block.BCARegtestForkBlockHash, node1_priv, node2_priv.publicKey, ShortChannelId(0), 0, 0, 0, 0, enable = false)
+    val channelUpdate2 = makeChannelUpdate(Block.BCARegtestForkBlockHash, node2_priv, node1_priv.publicKey, ShortChannelId(0), 0, 0, 0, 0, enable = true)
+    val channelUpdate2_disabled = makeChannelUpdate(Block.BCARegtestForkBlockHash, node2_priv, node1_priv.publicKey, ShortChannelId(0), 0, 0, 0, 0, enable = false)
     assert(channelUpdate1.flags == BinaryData("0000")) // ....00
     assert(channelUpdate1_disabled.flags == BinaryData("0002")) // ....10
     assert(channelUpdate2.flags == BinaryData("0001")) // ....01

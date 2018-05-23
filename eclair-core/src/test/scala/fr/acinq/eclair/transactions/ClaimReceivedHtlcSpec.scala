@@ -77,7 +77,7 @@ class ClaimReceivedHtlcSpec extends FunSuite {
       txOut = TxOut(10 satoshi, OP_DUP :: OP_HASH160 :: OP_PUSHDATA(Crypto.hash160(Alice.finalPubKey.toBin)) :: OP_EQUALVERIFY :: OP_CHECKSIG :: Nil) :: Nil,
       lockTime = abstimeout + 1)
 
-    val sig = Transaction.signInput(tx2, 0, Script.write(htlcScript), SIGHASH_ALL, tx.txOut(0).amount, 1, Alice.finalKey)
+    val sig = Transaction.signInput(tx2, 0, Script.write(htlcScript), SIGHASH_BCAFORK, tx.txOut(0).amount, 1, Alice.finalKey)
     val witness = ScriptWitness(sig :: Bob.R :: redeemScript :: Nil)
     val tx3 = tx2.updateWitness(0, witness)
 
@@ -91,7 +91,7 @@ class ClaimReceivedHtlcSpec extends FunSuite {
       txOut = TxOut(10 satoshi, OP_DUP :: OP_HASH160 :: OP_PUSHDATA(Crypto.hash160(Bob.finalPubKey.toBin)) :: OP_EQUALVERIFY :: OP_CHECKSIG :: Nil) :: Nil,
       lockTime = abstimeout + 1)
 
-    val sig = Transaction.signInput(tx2, 0, Script.write(htlcScript), SIGHASH_ALL, tx.txOut(0).amount, 1, Bob.finalKey)
+    val sig = Transaction.signInput(tx2, 0, Script.write(htlcScript), SIGHASH_BCAFORK, tx.txOut(0).amount, 1, Bob.finalKey)
     val witness = ScriptWitness(sig :: Hash.Zeroes :: redeemScript :: Nil)
     val tx3 = tx2.updateWitness(0, witness)
 
@@ -99,7 +99,7 @@ class ClaimReceivedHtlcSpec extends FunSuite {
   }
 
   test("Blob can spend this HTLC right away if he knows the revocation hash") {
-    val sig = Transaction.signInput(tx1, 0, Script.write(htlcScript), SIGHASH_ALL, tx.txOut(0).amount, 1, Bob.finalKey)
+    val sig = Transaction.signInput(tx1, 0, Script.write(htlcScript), SIGHASH_BCAFORK, tx.txOut(0).amount, 1, Bob.finalKey)
     val witness = ScriptWitness(sig :: Bob.revokeCommit :: redeemScript :: Nil)
     val tx2 = tx1.updateWitness(0, witness)
     Transaction.correctlySpends(tx2, Seq(tx), ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS)

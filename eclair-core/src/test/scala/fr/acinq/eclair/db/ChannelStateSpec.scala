@@ -49,7 +49,7 @@ class ChannelStateSpec extends FunSuite {
 }
 
 object ChannelStateSpec {
-  val keyManager = new LocalKeyManager("01" * 32, Block.RegtestGenesisBlock.hash)
+  val keyManager = new LocalKeyManager("01" * 32, Block.BCARegtestForkBlockHash)
   val localParams = LocalParams(
     keyManager.nodeId,
     channelKeyPath = DeterministicWallet.KeyPath(Seq(42L)),

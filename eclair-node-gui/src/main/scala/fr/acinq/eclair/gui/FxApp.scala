@@ -28,7 +28,6 @@ import javafx.stage.{Popup, Screen, Stage, WindowEvent}
 import akka.actor.{Props, SupervisorStrategy}
 import fr.acinq.eclair._
 import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor._
-import fr.acinq.eclair.blockchain.electrum.ElectrumClient.ElectrumEvent
 import fr.acinq.eclair.channel.ChannelEvent
 import fr.acinq.eclair.gui.controllers.{MainController, NotificationsController}
 import fr.acinq.eclair.payment.PaymentEvent
@@ -54,14 +53,14 @@ class FxApp extends Application with Logging {
     case e@TCPBindException(port) =>
       notifyPreloader(new ErrorNotification("Setup", s"Could not bind to port $port", e))
     case e@BitcoinRPCConnectionException =>
-      notifyPreloader(new ErrorNotification("Setup", "Could not connect to Bitcoin Core using JSON-RPC.", e))
-      notifyPreloader(new AppNotification(InfoAppNotification, "Make sure that Bitcoin Core is up and running and RPC parameters are correct."))
+      notifyPreloader(new ErrorNotification("Setup", "Could not connect to Atom Core using JSON-RPC.", e))
+      notifyPreloader(new AppNotification(InfoAppNotification, "Make sure that Atom Core is up and running and RPC parameters are correct."))
     case e@BitcoinZMQConnectionTimeoutException =>
-      notifyPreloader(new ErrorNotification("Setup", "Could not connect to Bitcoin Core using ZMQ.", e))
-      notifyPreloader(new AppNotification(InfoAppNotification, "Make sure that Bitcoin Core is up and running and ZMQ parameters are correct."))
+      notifyPreloader(new ErrorNotification("Setup", "Could not connect to Atom Core using ZMQ.", e))
+      notifyPreloader(new AppNotification(InfoAppNotification, "Make sure that Atom Core is up and running and ZMQ parameters are correct."))
     case e@IncompatibleDBException =>
       notifyPreloader(new ErrorNotification("Setup", "Breaking changes!", e))
-      notifyPreloader(new AppNotification(InfoAppNotification, "Eclair is still in alpha, and under heavy development. Last update was not backward compatible."))
+      notifyPreloader(new AppNotification(InfoAppNotification, "Eclair Atom is still in alpha, and under heavy development. Last update was not backward compatible."))
       notifyPreloader(new AppNotification(InfoAppNotification, "Please reset your datadir."))
     case e@IncompatibleNetworkDBException =>
       notifyPreloader(new ErrorNotification("Setup", "Unreadable network database!", e))
@@ -99,14 +98,13 @@ class FxApp extends Application with Logging {
           setup.system.eventStream.subscribe(guiUpdater, classOf[PaymentEvent])
           setup.system.eventStream.subscribe(guiUpdater, classOf[PaymentResult])
           setup.system.eventStream.subscribe(guiUpdater, classOf[ZMQEvent])
-          setup.system.eventStream.subscribe(guiUpdater, classOf[ElectrumEvent])
           pKit.completeWith(setup.bootstrap)
           pKit.future.onComplete {
             case Success(_) =>
               Platform.runLater(new Runnable {
                 override def run(): Unit = {
                   val scene = new Scene(mainRoot)
-                  primaryStage.setTitle("Eclair")
+                  primaryStage.setTitle("Eclair Atom")
                   primaryStage.setMinWidth(600)
                   primaryStage.setWidth(960)
                   primaryStage.setMinHeight(400)

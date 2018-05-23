@@ -26,12 +26,11 @@ import akka.stream.{ActorMaterializer, BindFailedException}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import fr.acinq.bitcoin.{BinaryData, Block}
-import fr.acinq.eclair.NodeParams.{BITCOIND, ELECTRUM}
+import fr.acinq.eclair.NodeParams.BITCOIND
 import fr.acinq.eclair.api.{GetInfoResponse, Service}
 import fr.acinq.eclair.blockchain.bitcoind.rpc.{BasicBitcoinJsonRPCClient, BatchingBitcoinJsonRPCClient, ExtendedBitcoinClient}
 import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor
 import fr.acinq.eclair.blockchain.bitcoind.{BitcoinCoreWallet, ZmqWatcher}
-import fr.acinq.eclair.blockchain.electrum._
 import fr.acinq.eclair.blockchain.fee.{ConstantFeeProvider, _}
 import fr.acinq.eclair.blockchain.{EclairWallet, _}
 import fr.acinq.eclair.channel.Register
@@ -106,27 +105,17 @@ class Setup(datadir: File, overrideDefaults: Config = ConfigFactory.empty(), act
         }
       } yield (progress, chainHash, bitcoinVersion, unspentAddresses)
       // blocking sanity checks
-      val (progress, chainHash, bitcoinVersion, unspentAddresses) = Await.result(future, 30 seconds)
-      assert(bitcoinVersion.startsWith("16"), "Eclair requires Bitcoin Core 0.16.0 or higher")
-      assert(chainHash == nodeParams.chainHash, s"chainHash mismatch (conf=${nodeParams.chainHash} != bitcoind=$chainHash)")
+      val (progress, chainHash, bitcoinVersion, unspentAddresses) = Await.result(future, 10 seconds)
+      assert(bitcoinVersion.startsWith("16"), "Eclair Atom requires Atom Core 0.16.0 or higher")
+
       if (chainHash != Block.RegtestGenesisBlock.hash) {
         assert(unspentAddresses.forall(address => !isPay2PubkeyHash(address)), "Make sure that all your UTXOS are segwit UTXOS and not p2pkh (check out our README for more details)")
       }
-      assert(progress > 0.99, "bitcoind should be synchronized")
+
+      assert(progress > 0.99, "atomd should be synchronized")
       // TODO: add a check on bitcoin version?
 
       Bitcoind(bitcoinClient)
-    case ELECTRUM =>
-      logger.warn("EXPERIMENTAL ELECTRUM MODE ENABLED!!!")
-      val addressesFile = nodeParams.chainHash match {
-        case Block.RegtestGenesisBlock.hash => "/electrum/servers_regtest.json"
-        case Block.TestnetGenesisBlock.hash => "/electrum/servers_testnet.json"
-        case Block.LivenetGenesisBlock.hash => "/electrum/servers_mainnet.json"
-      }
-      val stream = classOf[Setup].getResourceAsStream(addressesFile)
-      val addresses = ElectrumClientPool.readServerAddresses(stream)
-      val electrumClient = system.actorOf(SimpleSupervisor.props(Props(new ElectrumClientPool(addresses)), "electrum-client", SupervisorStrategy.Resume))
-      Electrum(electrumClient)
   }
 
   def bootstrap: Future[Kit] = {
@@ -146,9 +135,9 @@ class Setup(datadir: File, overrideDefaults: Config = ConfigFactory.empty(), act
       )
       minFeeratePerByte = config.getLong("min-feerate")
       feeProvider = (nodeParams.chainHash, bitcoin) match {
-        case (Block.RegtestGenesisBlock.hash, _) => new FallbackFeeProvider(new ConstantFeeProvider(defaultFeerates) :: Nil, minFeeratePerByte)
-        case (_, Bitcoind(bitcoinClient)) => new FallbackFeeProvider(new BitgoFeeProvider(nodeParams.chainHash) :: new EarnDotComFeeProvider() :: new BitcoinCoreFeeProvider(bitcoinClient, defaultFeerates) :: new ConstantFeeProvider(defaultFeerates) :: Nil, minFeeratePerByte) // order matters!
-        case _ => new FallbackFeeProvider(new BitgoFeeProvider(nodeParams.chainHash) :: new EarnDotComFeeProvider() :: new ConstantFeeProvider(defaultFeerates) :: Nil, minFeeratePerByte) // order matters!
+        case (Block.BCARegtestForkBlockHash, _) => new FallbackFeeProvider(new ConstantFeeProvider(defaultFeerates) :: Nil, minFeeratePerByte)
+        case (_, Bitcoind(bitcoinClient)) => new FallbackFeeProvider(new BitcoinCoreFeeProvider(bitcoinClient, defaultFeerates) :: new ConstantFeeProvider(defaultFeerates) :: Nil, minFeeratePerByte) // order matters!
+        case _ => new FallbackFeeProvider(new ConstantFeeProvider(defaultFeerates) :: Nil, minFeeratePerByte) // order matters!
       }
       _ = system.scheduler.schedule(0 seconds, 10 minutes)(feeProvider.getFeerates.map {
         case feerates: FeeratesPerKB =>
@@ -164,16 +153,10 @@ class Setup(datadir: File, overrideDefaults: Config = ConfigFactory.empty(), act
         case Bitcoind(bitcoinClient) =>
           system.actorOf(SimpleSupervisor.props(Props(new ZMQActor(config.getString("bitcoind.zmq"), Some(zmqConnected))), "zmq", SupervisorStrategy.Restart))
           system.actorOf(SimpleSupervisor.props(ZmqWatcher.props(new ExtendedBitcoinClient(new BatchingBitcoinJsonRPCClient(bitcoinClient))), "watcher", SupervisorStrategy.Resume))
-        case Electrum(electrumClient) =>
-          zmqConnected.success(true)
-          system.actorOf(SimpleSupervisor.props(Props(new ElectrumWatcher(electrumClient)), "watcher", SupervisorStrategy.Resume))
       }
 
       wallet = bitcoin match {
         case Bitcoind(bitcoinClient) => new BitcoinCoreWallet(bitcoinClient)
-        case Electrum(electrumClient) =>
-          val electrumWallet = system.actorOf(ElectrumWallet.props(seed, electrumClient, ElectrumWallet.WalletParameters(nodeParams.chainHash)), "electrum-wallet")
-          new ElectrumEclairWallet(electrumWallet, nodeParams.chainHash)
       }
       _ = wallet.getFinalAddress.map {
         case address => logger.info(s"initial wallet address=$address")
@@ -228,6 +211,8 @@ class Setup(datadir: File, overrideDefaults: Config = ConfigFactory.empty(), act
               blockHeight = Globals.blockCount.intValue()))
 
           override def appKit: Kit = kit
+
+          override val socketHandler = makeSocketHandler(system)(materializer)
         }
         val httpBound = Http().bindAndHandle(api.route, config.getString("api.binding-ip"), config.getInt("api.port")).recover {
           case _: BindFailedException => throw TCPBindException(config.getInt("api.port"))
@@ -246,7 +231,6 @@ class Setup(datadir: File, overrideDefaults: Config = ConfigFactory.empty(), act
 // @formatter:off
 sealed trait Bitcoin
 case class Bitcoind(bitcoinClient: BasicBitcoinJsonRPCClient) extends Bitcoin
-case class Electrum(electrumClient: ActorRef) extends Bitcoin
 // @formatter:on
 
 case class Kit(nodeParams: NodeParams,
@@ -261,11 +245,11 @@ case class Kit(nodeParams: NodeParams,
                server: ActorRef,
                wallet: EclairWallet)
 
-case object BitcoinZMQConnectionTimeoutException extends RuntimeException("could not connect to bitcoind using zeromq")
+case object BitcoinZMQConnectionTimeoutException extends RuntimeException("could not connect to atomd using zeromq")
 
-case object BitcoinRPCConnectionException extends RuntimeException("could not connect to bitcoind using json-rpc")
+case object BitcoinRPCConnectionException extends RuntimeException("could not connect to atomd using json-rpc")
 
-case object BitcoinWalletDisabledException extends RuntimeException("bitcoind must have wallet support enabled")
+case object BitcoinWalletDisabledException extends RuntimeException("atomd must have wallet support enabled")
 
 case object EmptyAPIPasswordException extends RuntimeException("must set a password for the json-rpc api")
 

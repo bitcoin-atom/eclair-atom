@@ -39,11 +39,11 @@ class RouteCalculationSpec extends FunSuite {
 
   def makeChannel(shortChannelId: Long, nodeIdA: PublicKey, nodeIdB: PublicKey) = {
     val (nodeId1, nodeId2) = if (Announcements.isNode1(nodeIdA, nodeIdB)) (nodeIdA, nodeIdB) else (nodeIdB, nodeIdA)
-    ChannelAnnouncement(DUMMY_SIG, DUMMY_SIG, DUMMY_SIG, DUMMY_SIG, "", Block.RegtestGenesisBlock.hash, ShortChannelId(shortChannelId), nodeId1, nodeId2, randomKey.publicKey, randomKey.publicKey)
+    ChannelAnnouncement(DUMMY_SIG, DUMMY_SIG, DUMMY_SIG, DUMMY_SIG, "", Block.BCARegtestForkBlockHash, ShortChannelId(shortChannelId), nodeId1, nodeId2, randomKey.publicKey, randomKey.publicKey)
   }
 
   def makeUpdate(shortChannelId: Long, nodeId1: PublicKey, nodeId2: PublicKey, feeBaseMsat: Int, feeProportionalMillionth: Int): (ChannelDesc, ChannelUpdate) =
-    (ChannelDesc(ShortChannelId(shortChannelId), nodeId1, nodeId2) -> ChannelUpdate(DUMMY_SIG, Block.RegtestGenesisBlock.hash, ShortChannelId(shortChannelId), 0L, "0000", 1, 42, feeBaseMsat, feeProportionalMillionth))
+    (ChannelDesc(ShortChannelId(shortChannelId), nodeId1, nodeId2) -> ChannelUpdate(DUMMY_SIG, Block.BCARegtestForkBlockHash, ShortChannelId(shortChannelId), 0L, "0000", 1, 42, feeBaseMsat, feeProportionalMillionth))
 
 
   def makeGraph(updates: Map[ChannelDesc, ChannelUpdate]) = {
@@ -208,14 +208,14 @@ class RouteCalculationSpec extends FunSuite {
 
     val DUMMY_SIG = BinaryData("3045022100e0a180fdd0fe38037cc878c03832861b40a29d32bd7b40b10c9e1efc8c1468a002205ae06d1624896d0d29f4b31e32772ea3cb1b4d7ed4e077e5da28dcc33c0e781201")
 
-    val uab = ChannelUpdate(DUMMY_SIG, Block.RegtestGenesisBlock.hash, ShortChannelId(1L), 0L, "0000", 1, 42, 2500, 140)
-    val uba = ChannelUpdate(DUMMY_SIG, Block.RegtestGenesisBlock.hash, ShortChannelId(1L), 1L, "0001", 1, 43, 2501, 141)
-    val ubc = ChannelUpdate(DUMMY_SIG, Block.RegtestGenesisBlock.hash, ShortChannelId(2L), 1L, "0000", 1, 44, 2502, 142)
-    val ucb = ChannelUpdate(DUMMY_SIG, Block.RegtestGenesisBlock.hash, ShortChannelId(2L), 1L, "0001", 1, 45, 2503, 143)
-    val ucd = ChannelUpdate(DUMMY_SIG, Block.RegtestGenesisBlock.hash, ShortChannelId(3L), 1L, "0000", 1, 46, 2504, 144)
-    val udc = ChannelUpdate(DUMMY_SIG, Block.RegtestGenesisBlock.hash, ShortChannelId(3L), 1L, "0001", 1, 47, 2505, 145)
-    val ude = ChannelUpdate(DUMMY_SIG, Block.RegtestGenesisBlock.hash, ShortChannelId(4L), 1L, "0000", 1, 48, 2506, 146)
-    val ued = ChannelUpdate(DUMMY_SIG, Block.RegtestGenesisBlock.hash, ShortChannelId(4L), 1L, "0001", 1, 49, 2507, 147)
+    val uab = ChannelUpdate(DUMMY_SIG, Block.BCARegtestForkBlockHash, ShortChannelId(1L), 0L, "0000", 1, 42, 2500, 140)
+    val uba = ChannelUpdate(DUMMY_SIG, Block.BCARegtestForkBlockHash, ShortChannelId(1L), 1L, "0001", 1, 43, 2501, 141)
+    val ubc = ChannelUpdate(DUMMY_SIG, Block.BCARegtestForkBlockHash, ShortChannelId(2L), 1L, "0000", 1, 44, 2502, 142)
+    val ucb = ChannelUpdate(DUMMY_SIG, Block.BCARegtestForkBlockHash, ShortChannelId(2L), 1L, "0001", 1, 45, 2503, 143)
+    val ucd = ChannelUpdate(DUMMY_SIG, Block.BCARegtestForkBlockHash, ShortChannelId(3L), 1L, "0000", 1, 46, 2504, 144)
+    val udc = ChannelUpdate(DUMMY_SIG, Block.BCARegtestForkBlockHash, ShortChannelId(3L), 1L, "0001", 1, 47, 2505, 145)
+    val ude = ChannelUpdate(DUMMY_SIG, Block.BCARegtestForkBlockHash, ShortChannelId(4L), 1L, "0000", 1, 48, 2506, 146)
+    val ued = ChannelUpdate(DUMMY_SIG, Block.BCARegtestForkBlockHash, ShortChannelId(4L), 1L, "0001", 1, 49, 2507, 147)
 
     val updates = Map(
       ChannelDesc(ShortChannelId(1L), a, b) -> uab,

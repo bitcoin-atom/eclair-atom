@@ -77,7 +77,7 @@ class BasicBitcoinJsonRPCClient(user: String, password: String, host: String = "
       _ = log.debug("sending rpc request with body={}", entity)
       httpRes <- queueRequest(HttpRequest(uri = "/", method = HttpMethods.POST).addHeader(Authorization(BasicHttpCredentials(user, password))).withEntity(entity))
       jsonRpcRes <- Unmarshal(httpRes).to[Seq[JsonRPCResponse]].recover {
-        case t: Throwable if httpRes.status == StatusCodes.Unauthorized => throw new RuntimeException("bitcoind replied with 401/Unauthorized (bad user/password?)", t)
+        case t: Throwable if httpRes.status == StatusCodes.Unauthorized => throw new RuntimeException("atomd replied with 401/Unauthorized (bad user/password?)", t)
       }
     } yield jsonRpcRes
 

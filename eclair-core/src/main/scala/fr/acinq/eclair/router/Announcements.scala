@@ -48,8 +48,8 @@ object Announcements {
     } else {
       channelAnnouncementWitnessEncode(chainHash, shortChannelId, remoteNodeId, localNodeSecret.publicKey, remoteFundingKey, localFundingPrivKey.publicKey, features)
     }
-    val nodeSig = Crypto.encodeSignature(Crypto.sign(witness, localNodeSecret)) :+ 1.toByte
-    val bitcoinSig = Crypto.encodeSignature(Crypto.sign(witness, localFundingPrivKey)) :+ 1.toByte
+    val nodeSig = Crypto.encodeSignatureBCA(Crypto.sign(witness, localNodeSecret))
+    val bitcoinSig = Crypto.encodeSignatureBCA(Crypto.sign(witness, localFundingPrivKey))
     (nodeSig, bitcoinSig)
   }
 
@@ -79,7 +79,7 @@ object Announcements {
     require(alias.size <= 32)
     val nodeAddresses = addresses.map(NodeAddress(_))
     val witness = nodeAnnouncementWitnessEncode(timestamp, nodeSecret.publicKey, color, alias, "", nodeAddresses)
-    val sig = Crypto.encodeSignature(Crypto.sign(witness, nodeSecret)) :+ 1.toByte
+    val sig = Crypto.encodeSignatureBCA(Crypto.sign(witness, nodeSecret))
     NodeAnnouncement(
       signature = sig,
       timestamp = timestamp,
@@ -124,7 +124,7 @@ object Announcements {
     val flags = makeFlags(isNode1 = isNode1(nodeSecret.publicKey.toBin, remoteNodeId.toBin), enable = enable)
     require(flags.size == 2, "flags must be a 2-bytes field")
     val witness = channelUpdateWitnessEncode(chainHash, shortChannelId, timestamp, flags, cltvExpiryDelta, htlcMinimumMsat, feeBaseMsat, feeProportionalMillionths)
-    val sig = Crypto.encodeSignature(Crypto.sign(witness, nodeSecret)) :+ 1.toByte
+    val sig = Crypto.encodeSignatureBCA(Crypto.sign(witness, nodeSecret))
     ChannelUpdate(
       signature = sig,
       chainHash = chainHash,

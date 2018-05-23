@@ -29,13 +29,13 @@ class LocalKeyManagerSpec extends FunSuite {
     // if this test breaks it means that we will generate a different node id  from
     // the same seed, which could be a problem during an upgrade
     val seed = BinaryData("17b086b228025fa8f4416324b6ba2ec36e68570ae2fc3d392520969f2a9d0c1501")
-    val keyManager = new LocalKeyManager(seed, Block.TestnetGenesisBlock.hash)
+    val keyManager = new LocalKeyManager(seed, Block.BCATestnetForkBlockHash)
     assert(keyManager.nodeId == PublicKey("02a051267759c3a149e3e72372f4e0c4054ba597ebfd0eda78a2273023667205ee"))
   }
   test("generate different node ids from the same seed on different chains") {
     val seed = BinaryData("17b086b228025fa8f4416324b6ba2ec36e68570ae2fc3d392520969f2a9d0c1501")
-    val keyManager1 = new LocalKeyManager(seed, Block.TestnetGenesisBlock.hash)
-    val keyManager2 = new LocalKeyManager(seed, Block.LivenetGenesisBlock.hash)
+    val keyManager1 = new LocalKeyManager(seed, Block.BCATestnetForkBlockHash)
+    val keyManager2 = new LocalKeyManager(seed, Block.BCALivenetForkBlockHash)
     assert(keyManager1.nodeId != keyManager2.nodeId)
     val keyPath = KeyPath(1L :: Nil)
     assert(keyManager1.fundingPublicKey(keyPath) != keyManager2.fundingPublicKey(keyPath))

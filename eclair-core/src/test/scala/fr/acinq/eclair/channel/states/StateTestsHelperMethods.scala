@@ -56,7 +56,7 @@ trait StateTestsHelperMethods extends TestKitBase {
     system.eventStream.subscribe(relayer.ref, classOf[LocalChannelUpdate])
     system.eventStream.subscribe(relayer.ref, classOf[LocalChannelDown])
     // hacky... publish a fake update and wait till we've received it
-//    val fakeUpdate = LocalChannelUpdate(probe.ref, BinaryData("00" * 32), 0, PrivateKey("01" * 32).publicKey, None, ChannelUpdate(LightningMessageCodecsSpec.randomSignature, Block.RegtestGenesisBlock.hash, 1, 2, BinaryData("0202"), 3, 4, 5, 6))
+//    val fakeUpdate = LocalChannelUpdate(probe.ref, BinaryData("00" * 32), 0, PrivateKey("01" * 32).publicKey, None, ChannelUpdate(LightningMessageCodecsSpec.randomSignature, Block.BCARegtestForkBlockHash, 1, 2, BinaryData("0202"), 3, 4, 5, 6))
 //    system.eventStream.publish(fakeUpdate)
 //    probe.expectMsg(fakeUpdate)
     val router = TestProbe()

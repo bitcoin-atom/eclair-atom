@@ -39,7 +39,7 @@ object TestConstants {
 
   object Alice {
     val seed = BinaryData("01" * 32)
-    val keyManager = new LocalKeyManager(seed, Block.RegtestGenesisBlock.hash)
+    val keyManager = new LocalKeyManager(seed, Block.BCARegtestForkBlockHash)
 
     def sqlite = DriverManager.getConnection("jdbc:sqlite::memory:")
 
@@ -74,7 +74,7 @@ object TestConstants {
       maxFeerateMismatch = 1.5,
       updateFeeMinDiffRatio = 0.1,
       autoReconnect = false,
-      chainHash = Block.RegtestGenesisBlock.hash,
+      chainHash = Block.BCARegtestForkBlockHash,
       channelFlags = 1,
       channelExcludeDuration = 5 seconds,
       watcherType = BITCOIND,
@@ -94,7 +94,7 @@ object TestConstants {
 
   object Bob {
     val seed = BinaryData("02" * 32)
-    val keyManager = new LocalKeyManager(seed, Block.RegtestGenesisBlock.hash)
+    val keyManager = new LocalKeyManager(seed, Block.BCARegtestForkBlockHash)
 
     def sqlite = DriverManager.getConnection("jdbc:sqlite::memory:")
 
@@ -128,7 +128,7 @@ object TestConstants {
       maxFeerateMismatch = 1.0,
       updateFeeMinDiffRatio = 0.1,
       autoReconnect = false,
-      chainHash = Block.RegtestGenesisBlock.hash,
+      chainHash = Block.BCARegtestForkBlockHash,
       channelFlags = 1,
       channelExcludeDuration = 5 seconds,
       watcherType = BITCOIND,

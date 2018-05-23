@@ -61,10 +61,10 @@ class WaitForOpenChannelStateSpec extends TestkitBaseClass with StateTestsHelper
     within(30 seconds) {
       val open = alice2bob.expectMsgType[OpenChannel]
       // using livenet genesis block
-      val livenetChainHash = Block.LivenetGenesisBlock.hash
+      val livenetChainHash = Block.BCALivenetForkBlockHash
       bob ! open.copy(chainHash = livenetChainHash)
       val error = bob2alice.expectMsgType[Error]
-      assert(error === Error(open.temporaryChannelId, new InvalidChainHash(open.temporaryChannelId, Block.RegtestGenesisBlock.hash, livenetChainHash).getMessage.getBytes("UTF-8")))
+      assert(error === Error(open.temporaryChannelId, new InvalidChainHash(open.temporaryChannelId, Block.BCARegtestForkBlockHash, livenetChainHash).getMessage.getBytes("UTF-8")))
       awaitCond(bob.stateName == CLOSED)
     }
   }
@@ -83,7 +83,7 @@ class WaitForOpenChannelStateSpec extends TestkitBaseClass with StateTestsHelper
   test("recv OpenChannel (funding too high)") { case (bob, alice2bob, bob2alice, _) =>
     within(30 seconds) {
       val open = alice2bob.expectMsgType[OpenChannel]
-      val highFundingMsat = 100000000
+      val highFundingMsat = 5000000001L
       bob ! open.copy(fundingSatoshis = highFundingMsat)
       val error = bob2alice.expectMsgType[Error]
       assert(error === Error(open.temporaryChannelId, new InvalidFundingAmount(open.temporaryChannelId, highFundingMsat, Bob.nodeParams.minFundingSatoshis, Channel.MAX_FUNDING_SATOSHIS).getMessage.getBytes("UTF-8")))

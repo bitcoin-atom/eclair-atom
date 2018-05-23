@@ -30,7 +30,6 @@ import fr.acinq.bitcoin.Crypto.PublicKey
 import fr.acinq.bitcoin._
 import fr.acinq.eclair.CoinUtils
 import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor.{ZMQConnected, ZMQDisconnected}
-import fr.acinq.eclair.blockchain.electrum.ElectrumClient.{ElectrumDisconnected, ElectrumReady}
 import fr.acinq.eclair.channel._
 import fr.acinq.eclair.gui.controllers._
 import fr.acinq.eclair.payment.PaymentLifecycle.{LocalFailure, PaymentFailed, PaymentSucceeded, RemoteFailure}
@@ -226,15 +225,15 @@ class GUIUpdater(mainController: MainController) extends Actor with ActorLogging
 
     case p: PaymentSent =>
       log.debug(s"payment sent with h=${p.paymentHash}, amount=${p.amount}, fees=${p.feesPaid}")
-      runInGuiThread(() => mainController.paymentSentList.prepend(new PaymentSentRecord(p, LocalDateTime.now())))
+      runInGuiThread(() => mainController.paymentSentList.prepend(PaymentSentRecord(p, LocalDateTime.now())))
 
     case p: PaymentReceived =>
       log.debug(s"payment received with h=${p.paymentHash}, amount=${p.amount}")
-      runInGuiThread(() => mainController.paymentReceivedList.prepend(new PaymentReceivedRecord(p, LocalDateTime.now())))
+      runInGuiThread(() => mainController.paymentReceivedList.prepend(PaymentReceivedRecord(p, LocalDateTime.now())))
 
     case p: PaymentRelayed =>
       log.debug(s"payment relayed with h=${p.paymentHash}, amount=${p.amountIn}, feesEarned=${p.amountOut}")
-      runInGuiThread(() => mainController.paymentRelayedList.prepend(new PaymentRelayedRecord(p, LocalDateTime.now())))
+      runInGuiThread(() => mainController.paymentRelayedList.prepend(PaymentRelayedRecord(p, LocalDateTime.now())))
 
     case ZMQConnected =>
       log.debug("ZMQ connection UP")
@@ -242,14 +241,6 @@ class GUIUpdater(mainController: MainController) extends Actor with ActorLogging
 
     case ZMQDisconnected =>
       log.debug("ZMQ connection DOWN")
-      runInGuiThread(() => mainController.showBlockerModal("Bitcoin Core"))
-
-    case _: ElectrumReady =>
-      log.debug("Electrum connection UP")
-      runInGuiThread(() => mainController.hideBlockerModal)
-
-    case ElectrumDisconnected =>
-      log.debug("Electrum connection DOWN")
-      runInGuiThread(() => mainController.showBlockerModal("Electrum"))
+      runInGuiThread(() => mainController.showBlockerModal("Atom Core"))
   }
 }

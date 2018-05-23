@@ -123,7 +123,7 @@ object LightningMessageCodecs {
     require(sig.length == 64, "wire signature length must be 64")
     val r = new BigInteger(1, sig.take(32).toArray)
     val s = new BigInteger(1, sig.takeRight(32).toArray)
-    Crypto.encodeSignature(r, s) :+ fr.acinq.bitcoin.SIGHASH_ALL.toByte // wtf ??
+    Crypto.encodeSignatureBCA(r, s)
   }
 
   val initCodec: Codec[Init] = (

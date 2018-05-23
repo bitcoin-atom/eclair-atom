@@ -39,7 +39,7 @@ class WaitForAcceptChannelStateSpec extends TestkitBaseClass with StateTestsHelp
 
   override def withFixture(test: OneArgTest) = {
     val setup = if (test.tags.contains("mainnet")) {
-      init(TestConstants.Alice.nodeParams.copy(chainHash = Block.LivenetGenesisBlock.hash), TestConstants.Bob.nodeParams.copy(chainHash = Block.LivenetGenesisBlock.hash))
+      init(TestConstants.Alice.nodeParams.copy(chainHash = Block.BCALivenetForkBlockHash), TestConstants.Bob.nodeParams.copy(chainHash = Block.BCALivenetForkBlockHash))
     } else {
       init()
     }

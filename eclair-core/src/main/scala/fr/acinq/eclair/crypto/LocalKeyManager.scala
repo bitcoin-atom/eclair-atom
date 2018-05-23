@@ -27,8 +27,8 @@ import fr.acinq.eclair.transactions.Transactions.TransactionWithInputInfo
 
 object LocalKeyManager {
   def channelKeyBasePath(chainHash: BinaryData) = chainHash match {
-    case Block.RegtestGenesisBlock.hash | Block.TestnetGenesisBlock.hash => DeterministicWallet.hardened(46) :: DeterministicWallet.hardened(1) :: Nil
-    case Block.LivenetGenesisBlock.hash => DeterministicWallet.hardened(47) :: DeterministicWallet.hardened(1) :: Nil
+    case Block.BCARegtestForkBlockHash | Block.BCATestnetForkBlockHash => DeterministicWallet.hardened(46) :: DeterministicWallet.hardened(1) :: Nil
+    case Block.BCALivenetForkBlockHash => DeterministicWallet.hardened(47) :: DeterministicWallet.hardened(1) :: Nil
   }
 
 
@@ -36,8 +36,8 @@ object LocalKeyManager {
   // Note that the node path and the above channel path are on different branches so even if the
   // node key is compromised there is no way to retrieve the wallet keys
   def nodeKeyBasePath(chainHash: BinaryData) = chainHash match {
-    case Block.RegtestGenesisBlock.hash | Block.TestnetGenesisBlock.hash => DeterministicWallet.hardened(46) :: DeterministicWallet.hardened(0) :: Nil
-    case Block.LivenetGenesisBlock.hash => DeterministicWallet.hardened(47) :: DeterministicWallet.hardened(0) :: Nil
+    case Block.BCARegtestForkBlockHash | Block.BCATestnetForkBlockHash => DeterministicWallet.hardened(46) :: DeterministicWallet.hardened(0) :: Nil
+    case Block.BCALivenetForkBlockHash => DeterministicWallet.hardened(47) :: DeterministicWallet.hardened(0) :: Nil
   }
 }
 
@@ -141,8 +141,8 @@ class LocalKeyManager(seed: BinaryData, chainHash: BinaryData) extends KeyManage
     } else {
       Announcements.channelAnnouncementWitnessEncode(chainHash, shortChannelId, remoteNodeId, nodeId, remoteFundingKey, fundingPublicKey(channelKeyPath).publicKey, features)
     }
-    val nodeSig = Crypto.encodeSignature(Crypto.sign(witness, nodeKey.privateKey)) :+ 1.toByte
-    val bitcoinSig = Crypto.encodeSignature(Crypto.sign(witness, fundingPrivateKey(channelKeyPath).privateKey)) :+ 1.toByte
+    val nodeSig = Crypto.encodeSignatureBCA(Crypto.sign(witness, nodeKey.privateKey))
+    val bitcoinSig = Crypto.encodeSignatureBCA(Crypto.sign(witness, fundingPrivateKey(channelKeyPath).privateKey))
     (nodeSig, bitcoinSig)
   }
 }

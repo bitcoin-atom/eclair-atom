@@ -84,8 +84,6 @@ object NodeParams {
 
   object BITCOIND extends WatcherType
 
-  object ELECTRUM extends WatcherType
-
   /**
     * Order of precedence for the configuration parameters:
     * 1) Java environment variables (-D...)
@@ -113,9 +111,9 @@ object NodeParams {
 
   def makeChainHash(chain: String): BinaryData = {
     chain match {
-      case "regtest" => Block.RegtestGenesisBlock.hash
-      case "testnet" => Block.TestnetGenesisBlock.hash
-      case "mainnet" => Block.LivenetGenesisBlock.hash
+      case "regtest" => Block.BCARegtestForkBlockHash
+      case "testnet" => Block.BCATestnetForkBlockHash
+      case "mainnet" => Block.BCALivenetForkBlockHash
       case invalid => throw new RuntimeException(s"invalid chain '$invalid'")
     }
   }
@@ -143,12 +141,11 @@ object NodeParams {
     require(color.size == 3, "color should be a 3-bytes hex buffer")
 
     val watcherType = config.getString("watcher-type") match {
-      case "electrum" => ELECTRUM
       case _ => BITCOIND
     }
 
     val dustLimitSatoshis = config.getLong("dust-limit-satoshis")
-    if (chainHash == Block.LivenetGenesisBlock.hash) {
+    if (chainHash == Block.BCALivenetForkBlockHash) {
       require(dustLimitSatoshis >= Channel.MIN_DUSTLIMIT, s"dust limit must be greater than ${Channel.MIN_DUSTLIMIT}")
     }
 

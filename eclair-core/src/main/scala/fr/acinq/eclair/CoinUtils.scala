@@ -78,16 +78,16 @@ case object BitUnit extends CoinUnit {
 }
 
 case object MBtcUnit extends CoinUnit {
-  override def code: String = "mbtc"
-  override def shortLabel: String = "mBTC"
-  override def label: String = "MilliBitcoin"
+  override def code: String = "mbca"
+  override def shortLabel: String = "mBCA"
+  override def label: String = "MilliAtom"
   override def factorToMsat: Long = 1000 * 100000L // 1 mbtc = 1 00000 000 msat
 }
 
 case object BtcUnit extends CoinUnit {
-  override def code: String = "btc"
-  override def shortLabel: String = "BTC"
-  override def label: String = "Bitcoin"
+  override def code: String = "bca"
+  override def shortLabel: String = "BCA"
+  override def label: String = "Atom"
   override def factorToMsat: Long = 1000 * 100000 * 1000L // 1 btc = 1 000 00000 000 msat
 }
 

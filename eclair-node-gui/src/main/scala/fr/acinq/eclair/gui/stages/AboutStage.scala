@@ -34,7 +34,7 @@ class AboutStage(hostServices: HostServices) extends Stage() {
   initModality(Modality.WINDOW_MODAL)
   initStyle(StageStyle.DECORATED)
   getIcons().add(new Image("/gui/commons/images/eclair-square.png", false))
-  setTitle("About Eclair")
+  setTitle("About Eclair Atom")
   setResizable(false)
   setWidth(500)
   setHeight(200)

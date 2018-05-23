@@ -45,29 +45,29 @@ class PackageSpec extends FunSuite {
 
     // p2pkh
     // valid chain
-    assert(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.PubkeyAddressTestnet, pub.hash160), Block.TestnetGenesisBlock.hash) == Script.pay2pkh(pub))
-    assert(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.PubkeyAddressTestnet, pub.hash160), Block.RegtestGenesisBlock.hash) == Script.pay2pkh(pub))
-    assert(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160), Block.LivenetGenesisBlock.hash) == Script.pay2pkh(pub))
+    assert(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.PubkeyAddressTestnet, pub.hash160), Block.BCATestnetForkBlockHash) == Script.pay2pkh(pub))
+    assert(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.PubkeyAddressTestnet, pub.hash160), Block.BCARegtestForkBlockHash) == Script.pay2pkh(pub))
+    assert(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160), Block.BCALivenetForkBlockHash) == Script.pay2pkh(pub))
 
     // wrong chain
     intercept[RuntimeException] {
-      addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160), Block.TestnetGenesisBlock.hash)
+      addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160), Block.BCATestnetForkBlockHash)
     }
-    assert(Try(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160), Block.TestnetGenesisBlock.hash)).isFailure)
-    assert(Try(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160), Block.RegtestGenesisBlock.hash)).isFailure)
+    assert(Try(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160), Block.BCATestnetForkBlockHash)).isFailure)
+    assert(Try(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160), Block.BCARegtestForkBlockHash)).isFailure)
 
     // p2sh
     val script = Script.write(Script.pay2wpkh(pub))
 
     // valid chain
-    assert(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(script)), Block.TestnetGenesisBlock.hash) == Script.pay2sh(script))
-    assert(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(script)), Block.RegtestGenesisBlock.hash) == Script.pay2sh(script))
-    assert(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.ScriptAddress, Crypto.hash160(script)), Block.LivenetGenesisBlock.hash) == Script.pay2sh(script))
+    assert(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(script)), Block.BCATestnetForkBlockHash) == Script.pay2sh(script))
+    assert(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(script)), Block.BCARegtestForkBlockHash) == Script.pay2sh(script))
+    assert(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.ScriptAddress, Crypto.hash160(script)), Block.BCALivenetForkBlockHash) == Script.pay2sh(script))
 
     // wrong chain
-    assert(Try(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(script)), Block.LivenetGenesisBlock.hash)).isFailure)
-    assert(Try(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.ScriptAddress, Crypto.hash160(script)), Block.TestnetGenesisBlock.hash)).isFailure)
-    assert(Try(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.ScriptAddress, Crypto.hash160(script)), Block.RegtestGenesisBlock.hash)).isFailure)
+    assert(Try(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(script)), Block.BCALivenetForkBlockHash)).isFailure)
+    assert(Try(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.ScriptAddress, Crypto.hash160(script)), Block.BCATestnetForkBlockHash)).isFailure)
+    assert(Try(addressToPublicKeyScript(Base58Check.encode(Base58.Prefix.ScriptAddress, Crypto.hash160(script)), Block.BCARegtestForkBlockHash)).isFailure)
   }
 
   test("decode bech32 addresses") {
@@ -75,29 +75,29 @@ class PackageSpec extends FunSuite {
     val pub = priv.publicKey
 
     // p2wpkh
-    assert(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bc", 0, pub.hash160), Block.LivenetGenesisBlock.hash) == Script.pay2wpkh(pub))
-    assert(addressToPublicKeyScript(Bech32.encodeWitnessAddress("tb", 0, pub.hash160), Block.TestnetGenesisBlock.hash) == Script.pay2wpkh(pub))
-    assert(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bcrt", 0, pub.hash160), Block.RegtestGenesisBlock.hash) == Script.pay2wpkh(pub))
+    assert(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bca", 0, pub.hash160), Block.BCALivenetForkBlockHash) == Script.pay2wpkh(pub))
+    assert(addressToPublicKeyScript(Bech32.encodeWitnessAddress("tbca", 0, pub.hash160), Block.BCATestnetForkBlockHash) == Script.pay2wpkh(pub))
+    assert(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bcart", 0, pub.hash160), Block.BCARegtestForkBlockHash) == Script.pay2wpkh(pub))
 
     // wrong version
-    assert(Try(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bc", 1, pub.hash160), Block.LivenetGenesisBlock.hash)).isFailure)
-    assert(Try(addressToPublicKeyScript(Bech32.encodeWitnessAddress("tb", 1, pub.hash160), Block.TestnetGenesisBlock.hash)).isFailure)
-    assert(Try(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bcrt", 1, pub.hash160), Block.RegtestGenesisBlock.hash)).isFailure)
+    assert(Try(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bca", 1, pub.hash160), Block.BCALivenetForkBlockHash)).isFailure)
+    assert(Try(addressToPublicKeyScript(Bech32.encodeWitnessAddress("tbca", 1, pub.hash160), Block.BCATestnetForkBlockHash)).isFailure)
+    assert(Try(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bcart", 1, pub.hash160), Block.BCARegtestForkBlockHash)).isFailure)
 
     // wrong chain
-    assert(Try(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bc", 0, pub.hash160), Block.TestnetGenesisBlock.hash)).isFailure)
-    assert(Try(addressToPublicKeyScript(Bech32.encodeWitnessAddress("tb", 0, pub.hash160), Block.LivenetGenesisBlock.hash)).isFailure)
-    assert(Try(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bcrt", 0, pub.hash160), Block.LivenetGenesisBlock.hash)).isFailure)
+    assert(Try(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bca", 0, pub.hash160), Block.BCATestnetForkBlockHash)).isFailure)
+    assert(Try(addressToPublicKeyScript(Bech32.encodeWitnessAddress("tbca", 0, pub.hash160), Block.BCALivenetForkBlockHash)).isFailure)
+    assert(Try(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bcart", 0, pub.hash160), Block.BCALivenetForkBlockHash)).isFailure)
 
     val script = Script.write(Script.pay2wpkh(pub))
-    assert(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bc", 0, Crypto.sha256(script)), Block.LivenetGenesisBlock.hash) == Script.pay2wsh(script))
-    assert(addressToPublicKeyScript(Bech32.encodeWitnessAddress("tb", 0, Crypto.sha256(script)), Block.TestnetGenesisBlock.hash) == Script.pay2wsh(script))
-    assert(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bcrt", 0, Crypto.sha256(script)), Block.RegtestGenesisBlock.hash) == Script.pay2wsh(script))
+    assert(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bca", 0, Crypto.sha256(script)), Block.BCALivenetForkBlockHash) == Script.pay2wsh(script))
+    assert(addressToPublicKeyScript(Bech32.encodeWitnessAddress("tbca", 0, Crypto.sha256(script)), Block.BCATestnetForkBlockHash) == Script.pay2wsh(script))
+    assert(addressToPublicKeyScript(Bech32.encodeWitnessAddress("bcart", 0, Crypto.sha256(script)), Block.BCARegtestForkBlockHash) == Script.pay2wsh(script))
   }
 
   test("fail to decode invalid addresses") {
     val e = intercept[RuntimeException] {
-      addressToPublicKeyScript("1Qbbbbb", Block.LivenetGenesisBlock.hash)
+      addressToPublicKeyScript("1Qbbbbb", Block.BCALivenetForkBlockHash)
     }
     assert(e.getMessage.contains("is neither a valid Base58 address") && e.getMessage.contains("nor a valid Bech32 address"))
   }
