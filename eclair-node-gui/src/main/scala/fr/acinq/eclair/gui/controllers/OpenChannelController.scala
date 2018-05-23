@@ -78,8 +78,6 @@ class OpenChannelController(val handlers: Handlers, val stage: Stage) extends Lo
             fundingSatError.setText("Capacity must be greater than 0")
           case Success(capacitySat) if capacitySat.amount < 50000 =>
             fundingSatError.setText("Capacity is low and the channel may not be able to open")
-          case Success(capacitySat) if capacitySat.amount >= Channel.MAX_FUNDING_SATOSHIS =>
-            fundingSatError.setText(s"Capacity must be less than ${CoinUtils.formatAmountInUnit(Satoshi(Channel.MAX_FUNDING_SATOSHIS), FxApp.getUnit, withUnit = true)}")
           case Success(_) => fundingSatError.setText("")
           case _ => fundingSatError.setText("Capacity is not valid")
         }
@@ -99,8 +97,6 @@ class OpenChannelController(val handlers: Handlers, val stage: Stage) extends Lo
         Try(if (Strings.isNullOrEmpty(feerateField.getText())) None else Some(feerateField.getText().toLong))) match {
         case (Success(capacitySat), _, _) if capacitySat.amount <= 0 =>
           fundingSatError.setText("Capacity must be greater than 0")
-        case (Success(capacitySat), _, _) if capacitySat.amount >= Channel.MAX_FUNDING_SATOSHIS =>
-          fundingSatError.setText(s"Capacity must be less than ${CoinUtils.formatAmountInUnit(Satoshi(Channel.MAX_FUNDING_SATOSHIS), FxApp.getUnit, withUnit = true)}")
         case (Success(capacitySat), Success(pushMsat), _) if pushMsat > satoshi2millisatoshi(capacitySat).amount =>
           pushMsatError.setText("Push must be less or equal to capacity")
         case (Success(_), Success(pushMsat), _) if pushMsat < 0 =>

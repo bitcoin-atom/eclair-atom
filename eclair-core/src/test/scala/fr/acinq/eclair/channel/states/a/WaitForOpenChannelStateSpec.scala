@@ -75,18 +75,7 @@ class WaitForOpenChannelStateSpec extends TestkitBaseClass with StateTestsHelper
       val lowFundingMsat = 100
       bob ! open.copy(fundingSatoshis = lowFundingMsat)
       val error = bob2alice.expectMsgType[Error]
-      assert(error === Error(open.temporaryChannelId, new InvalidFundingAmount(open.temporaryChannelId, lowFundingMsat, Bob.nodeParams.minFundingSatoshis, Channel.MAX_FUNDING_SATOSHIS).getMessage.getBytes("UTF-8")))
-      awaitCond(bob.stateName == CLOSED)
-    }
-  }
-
-  test("recv OpenChannel (funding too high)") { case (bob, alice2bob, bob2alice, _) =>
-    within(30 seconds) {
-      val open = alice2bob.expectMsgType[OpenChannel]
-      val highFundingMsat = 5000000001L
-      bob ! open.copy(fundingSatoshis = highFundingMsat)
-      val error = bob2alice.expectMsgType[Error]
-      assert(error === Error(open.temporaryChannelId, new InvalidFundingAmount(open.temporaryChannelId, highFundingMsat, Bob.nodeParams.minFundingSatoshis, Channel.MAX_FUNDING_SATOSHIS).getMessage.getBytes("UTF-8")))
+      assert(error === Error(open.temporaryChannelId, new InvalidFundingAmount(open.temporaryChannelId, lowFundingMsat, Bob.nodeParams.minFundingSatoshis).getMessage.getBytes("UTF-8")))
       awaitCond(bob.stateName == CLOSED)
     }
   }
