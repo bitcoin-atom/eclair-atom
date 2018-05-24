@@ -8,12 +8,12 @@ This software follows the [Lightning Network Specifications (BOLTs)](https://git
  
  ---
  
- :construction: Both the BOLTs and Eclair itself are still a work in progress. Expect things to break/change!
+ :construction: Both the BOLTs and Eclair Atom itself are still a work in progress. Expect things to break/change!
  
- :rotating_light: If you intend to run Eclair on mainnet:
+ :rotating_light: If you intend to run Eclair Atom on mainnet:
  - Keep in mind that it is beta-quality software and **don't put too much money** in it
  - Eclair's JSON-RPC API should **NOT** be accessible from the outside world (similarly to Atom Core API)
- - Specific [configuration instructions for mainnet](#mainnet-usage) are provided below (by default Eclair runs on testnet)
+ - Specific [configuration instructions for mainnet](#mainnet-usage) are provided below (by default Eclair Atom runs on testnet)
  
 ---
 
@@ -25,10 +25,10 @@ This software follows the [Lightning Network Specifications (BOLTs)](https://git
 
 ### Configuring Atom Core
 
-:warning: Eclair requires Atom Core 0.16.0 or higher. If you are upgrading an existing wallet, you need to create a new address and send all your funds to that address.
+:warning: Eclair Atom requires Atom Core 0.16.0 or higher. If you are upgrading an existing wallet, you need to create a new address and send all your funds to that address.
 
-Eclair needs a _synchronized_, _segwit-ready_, **_zeromq-enabled_**, _wallet-enabled_, _non-pruning_, _tx-indexing_ [Atom Core](https://github.com/bitcoin-atom/bitcoin-atom) node. 
-Eclair will use any BCA it finds in the Atom Core wallet to fund any channels you choose to open. Eclair will return BCA from closed channels to this wallet.
+Eclair Atom needs a _synchronized_, _segwit-ready_, **_zeromq-enabled_**, _wallet-enabled_, _non-pruning_, _tx-indexing_ [Atom Core](https://github.com/bitcoin-atom/bitcoin-atom) node. 
+Eclair Atom will use any BCA it finds in the Atom Core wallet to fund any channels you choose to open. Eclair Atom will return BCA from closed channels to this wallet.
 
 Run atomd with the following minimal `atom.conf`:
 ```
@@ -43,7 +43,7 @@ zmqpubrawtx=tcp://127.0.0.1:29001
 addresstype=bech32
 ```
 
-### Installing Eclair on Linux
+### Installing Eclair Atom on Linux
 
 You need to first install java, more precisely a [JRE 1.8](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html).
 
@@ -59,11 +59,11 @@ java -jar eclair-node-gui-<version>-<commit_id>.jar
 java -jar eclair-node-<version>-<commit_id>.jar
 ```
 
-### Configuring Eclair
+### Configuring Eclair Atom
 
 #### Configuration file
 
-Eclair reads its configuration file, and write its logs, to `~/.eclair` by default.
+Eclair Atom reads its configuration file, and write its logs, to `~/.eclair` by default.
 
 To change your node's configuration, create a file named `eclair.conf` in `~/.eclair`. Here's an example configuration file:
 
@@ -156,7 +156,7 @@ docker run -ti --rm -v "/path_on_host:/data" -e "JAVA_OPTS=-Declair.printToConso
 
 ## Mainnet usage
 
-Following are the minimum configuration files you need to use for Atom Core and Eclair.
+Following are the minimum configuration files you need to use for Atom Core and Eclair Atom.
 
 ### Atom Core configuration
 
@@ -172,7 +172,7 @@ zmqpubrawtx=tcp://127.0.0.1:29001
 addresstype=bech32
 ```
 
-### Eclair configuration
+### Eclair Atom configuration
 
 ```
 eclair.chain=mainnet
