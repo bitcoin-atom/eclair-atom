@@ -1,8 +1,6 @@
 ![Eclair Logo](.readme/logo.png)
 
-[![Build Status](https://travis-ci.org/ACINQ/eclair.svg?branch=master)](https://travis-ci.org/ACINQ/eclair)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Gitter chat](https://img.shields.io/badge/chat-on%20gitter-rose.svg)](https://gitter.im/ACINQ/eclair)
 
 **Eclair** (french for Lightning) is a scala implementation of the Lightning Network. It can run with or without a GUI, and a JSON-RPC API is also available.
 
@@ -14,13 +12,10 @@ This software follows the [Lightning Network Specifications (BOLTs)](https://git
  
  :rotating_light: If you intend to run Eclair on mainnet:
  - Keep in mind that it is beta-quality software and **don't put too much money** in it
- - Eclair's JSON-RPC API should **NOT** be accessible from the outside world (similarly to Bitcoin Core API)
+ - Eclair's JSON-RPC API should **NOT** be accessible from the outside world (similarly to Atom Core API)
  - Specific [configuration instructions for mainnet](#mainnet-usage) are provided below (by default Eclair runs on testnet)
  
 ---
-
-## Lightning Network Specification Compliance
-Please see the latest [release note](https://github.com/ACINQ/eclair/releases) for detailed information on BOLT compliance.
 
 ## Overview
 
@@ -28,34 +23,27 @@ Please see the latest [release note](https://github.com/ACINQ/eclair/releases) f
 
 ## Installation
 
-### Configuring Bitcoin Core
+### Configuring Atom Core
 
-:warning: Eclair requires Bitcoin Core 0.16.0 or higher. If you are upgrading an existing wallet, you need to create a new address and send all your funds to that address.
+:warning: Eclair requires Atom Core 0.16.0 or higher. If you are upgrading an existing wallet, you need to create a new address and send all your funds to that address.
 
-Eclair needs a _synchronized_, _segwit-ready_, **_zeromq-enabled_**, _wallet-enabled_, _non-pruning_, _tx-indexing_ [Bitcoin Core](https://github.com/bitcoin/bitcoin) node. 
-Eclair will use any BTC it finds in the Bitcoin Core wallet to fund any channels you choose to open. Eclair will return BTC from closed channels to this wallet.
+Eclair needs a _synchronized_, _segwit-ready_, **_zeromq-enabled_**, _wallet-enabled_, _non-pruning_, _tx-indexing_ [Atom Core](https://github.com/bitcoin-atom/bitcoin-atom) node. 
+Eclair will use any BCA it finds in the Atom Core wallet to fund any channels you choose to open. Eclair will return BCA from closed channels to this wallet.
 
-Run bitcoind with the following minimal `bitcoin.conf`:
+Run atomd with the following minimal `atom.conf`:
 ```
 testnet=1
 server=1
 rpcuser=foo
 rpcpassword=bar
+rpcport=17332
 txindex=1
-zmqpubrawblock=tcp://127.0.0.1:29000
-zmqpubrawtx=tcp://127.0.0.1:29000
-addresstype=p2sh-segwit
+zmqpubrawblock=tcp://127.0.0.1:29001
+zmqpubrawtx=tcp://127.0.0.1:29001
+addresstype=bech32
 ```
 
-### Installing Eclair
-
-The released binaries can be downloaded [here](https://github.com/ACINQ/eclair/releases).
-
-#### Windows
-
-Just use the windows installer, it should create a shortcut on your desktop.
-
-#### Linux, macOS or manual install on Windows
+### Installing Eclair on Linux
 
 You need to first install java, more precisely a [JRE 1.8](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html).
 
@@ -90,14 +78,14 @@ Here are some of the most common options:
 name                         | description                                                                           | default value
 -----------------------------|---------------------------------------------------------------------------------------|--------------
  eclair.chain                | Which blockchain to use: *regtest*, *testnet* or *mainnet*                            | testnet
- eclair.server.port          | Lightning TCP port                                                                    | 9735
+ eclair.server.port          | Lightning TCP port                                                                    | 9835
  eclair.api.enabled          | Enable/disable the API                                                                | false. By default the API is disabled. If you want to enable it, you must set a password.
- eclair.api.port             | API HTTP port                                                                         | 8080
+ eclair.api.port             | API HTTP port                                                                         | 8180
  eclair.api.password         | API password (BASIC)                                                                  | "" (must be set if the API is enabled)
- eclair.bitcoind.rpcuser     | Bitcoin Core RPC user                                                                 | foo
- eclair.bitcoind.rpcpassword | Bitcoin Core RPC password                                                             | bar
- eclair.bitcoind.zmq         | Bitcoin Core ZMQ address                                                              | "tcp://127.0.0.1:29000"
- eclair.gui.unit             | Unit in which amounts are displayed (possible values: msat, sat, mbtc, btc)           | btc 
+ eclair.bitcoind.rpcuser     | Atom Core RPC user                                                                    | foo
+ eclair.bitcoind.rpcpassword | Atom Core RPC password                                                                | bar
+ eclair.bitcoind.zmq         | Atom Core ZMQ address                                                                 | "tcp://127.0.0.1:29001"
+ eclair.gui.unit             | Unit in which amounts are displayed (possible values: msat, sat, mBCA, BCA)           | BCA 
 
 Quotes are not required unless the value contains special characters. Full syntax guide [here](https://github.com/lightbend/config/blob/master/HOCON.md).
 
@@ -168,32 +156,32 @@ docker run -ti --rm -v "/path_on_host:/data" -e "JAVA_OPTS=-Declair.printToConso
 
 ## Mainnet usage
 
-Following are the minimum configuration files you need to use for Bitcoin Core and Eclair.
+Following are the minimum configuration files you need to use for Atom Core and Eclair.
 
-### Bitcoin Core configuration
+### Atom Core configuration
 
 ```
 testnet=0
 server=1
 rpcuser=<your-rpc-user-here>
 rpcpassword=<your-rpc-password-here>
+rpcport=17332
 txindex=1
-zmqpubrawblock=tcp://127.0.0.1:29000
-zmqpubrawtx=tcp://127.0.0.1:29000
-addresstype=p2sh-segwit
+zmqpubrawblock=tcp://127.0.0.1:29001
+zmqpubrawtx=tcp://127.0.0.1:29001
+addresstype=bech32
 ```
 
 ### Eclair configuration
 
 ```
 eclair.chain=mainnet
-eclair.bitcoind.rpcport=8332
-eclair.bitcoind.rpcuser=<your-bitcoin-core-rpc-user-here>
-eclair.bitcoind.rpcpassword=<your-bitcoin-core-rpc-passsword-here>
+eclair.bitcoind.rpcport=17332
+eclair.bitcoind.rpcuser=<your-atom-core-rpc-user-here>
+eclair.bitcoind.rpcpassword=<your-atom-core-rpc-passsword-here>
 ```
 
 
 ## Resources
 - [1] [The Bitcoin Lightning Network: Scalable Off-Chain Instant Payments](https://lightning.network/lightning-network-paper.pdf) by Joseph Poon and Thaddeus Dryja
 - [2] [Reaching The Ground With Lightning](https://github.com/ElementsProject/lightning/raw/master/doc/deployable-lightning.pdf) by Rusty Russell
-- [3] [Lightning Network Explorer](https://explorer.acinq.co) - Explore testnet LN nodes you can connect to
