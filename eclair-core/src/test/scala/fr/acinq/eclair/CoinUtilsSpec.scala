@@ -100,8 +100,8 @@ class CoinUtilsSpec  extends FunSuite {
   }
 
   test("Format any BtcAmount to a String with a given unit") {
-    assert(CoinUtils.formatAmountInUnit(MilliSatoshi(123456789), BtcUnit, withUnit = true) == "0.00123456789 BTC"
-    || CoinUtils.formatAmountInUnit(MilliSatoshi(123456789), BtcUnit, withUnit = true) == "0,00123456789 BTC")
+    assert(CoinUtils.formatAmountInUnit(MilliSatoshi(123456789), BtcUnit, withUnit = true) == "0.00123456789 BCA"
+    || CoinUtils.formatAmountInUnit(MilliSatoshi(123456789), BtcUnit, withUnit = true) == "0,00123456789 BCA")
   }
 }
 

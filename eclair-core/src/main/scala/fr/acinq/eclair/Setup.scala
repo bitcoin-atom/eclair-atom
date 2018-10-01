@@ -42,7 +42,7 @@ import grizzled.slf4j.Logging
 import org.json4s.JsonAST.JArray
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future, Promise}
+import scala.concurrent._
 
 /**
   * Setup eclair from a datadir.
@@ -51,14 +51,16 @@ import scala.concurrent.{Await, ExecutionContext, Future, Promise}
   *
   * @param datadir  directory where eclair-core will write/read its data
   * @param overrideDefaults
-  * @param actorSystem
   * @param seed_opt optional seed, if set eclair will use it instead of generating one and won't create a seed.dat file.
   */
-class Setup(datadir: File, overrideDefaults: Config = ConfigFactory.empty(), actorSystem: ActorSystem = ActorSystem(), seed_opt: Option[BinaryData] = None) extends Logging {
+class Setup(datadir: File,
+            overrideDefaults: Config = ConfigFactory.empty(),
+            seed_opt: Option[BinaryData] = None)(implicit system: ActorSystem) extends Logging {
 
   logger.info(s"hello!")
   logger.info(s"version=${getClass.getPackage.getImplementationVersion} commit=${getClass.getPackage.getSpecificationVersion}")
   logger.info(s"datadir=${datadir.getCanonicalPath}")
+
 
   val config = NodeParams.loadConfiguration(datadir, overrideDefaults)
   val seed = seed_opt.getOrElse(NodeParams.getSeed(datadir))
@@ -78,7 +80,6 @@ class Setup(datadir: File, overrideDefaults: Config = ConfigFactory.empty(), act
   // this will force the secure random instance to initialize itself right now, making sure it doesn't hang later (see comment in package.scala)
   secureRandom.nextInt()
 
-  implicit val system = actorSystem
   implicit val materializer = ActorMaterializer()
   implicit val timeout = Timeout(30 seconds)
   implicit val formats = org.json4s.DefaultFormats
@@ -96,6 +97,8 @@ class Setup(datadir: File, overrideDefaults: Config = ConfigFactory.empty(), act
         // Make sure wallet support is enabled in bitcoind.
         _ <- bitcoinClient.invoke("getbalance").recover { case _ => throw BitcoinWalletDisabledException }
         progress = (json \ "verificationprogress").extract[Double]
+        blocks = (json \ "blocks").extract[Long]
+        headers = (json \ "headers").extract[Long]
         chainHash <- bitcoinClient.invoke("getblockhash", 0).map(_.extract[String]).map(BinaryData(_)).map(x => BinaryData(x.reverse))
         bitcoinVersion <- bitcoinClient.invoke("getnetworkinfo").map(json => (json \ "version")).map(_.extract[String])
         unspentAddresses <- bitcoinClient.invoke("listunspent").collect { case JArray(values) =>
@@ -103,16 +106,16 @@ class Setup(datadir: File, overrideDefaults: Config = ConfigFactory.empty(), act
             .filter(value => (value \ "spendable").extract[Boolean])
             .map(value => (value \ "address").extract[String])
         }
-      } yield (progress, chainHash, bitcoinVersion, unspentAddresses)
+      } yield (progress, chainHash, bitcoinVersion, unspentAddresses, blocks, headers)
       // blocking sanity checks
-      val (progress, chainHash, bitcoinVersion, unspentAddresses) = Await.result(future, 10 seconds)
-      assert(bitcoinVersion.startsWith("16"), "Eclair Atom requires Atom Core 0.16.0 or higher")
-
-      if (chainHash != Block.RegtestGenesisBlock.hash) {
+      val (progress, chainHash, bitcoinVersion, unspentAddresses, blocks, headers) = await(future, 30 seconds, "atomd did not respond after 30 seconds")
+      assert(bitcoinVersion.startsWith("16"), "Eclair requires Atom Core 0.16.0 or higher")
+      assert(chainHash == nodeParams.chainHash, s"chainHash mismatch (conf=${nodeParams.chainHash} != bitcoind=$chainHash)")
+      if (chainHash != Block.BCARegtestForkBlockHash) {
         assert(unspentAddresses.forall(address => !isPay2PubkeyHash(address)), "Make sure that all your UTXOS are segwit UTXOS and not p2pkh (check out our README for more details)")
       }
-
-      assert(progress > 0.99, "atomd should be synchronized")
+      assert(progress > 0.999, s"atomd should be synchronized (progress=$progress")
+      assert(headers - blocks <= 1, s"atomd should be synchronized (headers=$headers blocks=$blocks")
       // TODO: add a check on bitcoin version?
 
       Bitcoind(bitcoinClient)
@@ -134,9 +137,10 @@ class Setup(datadir: File, overrideDefaults: Config = ConfigFactory.empty(), act
         blocks_72 = config.getLong("default-feerates.delay-blocks.72")
       )
       minFeeratePerByte = config.getLong("min-feerate")
+      smoothFeerateWindow = config.getInt("smooth-feerate-window")
       feeProvider = (nodeParams.chainHash, bitcoin) match {
         case (Block.BCARegtestForkBlockHash, _) => new FallbackFeeProvider(new ConstantFeeProvider(defaultFeerates) :: Nil, minFeeratePerByte)
-        case (_, Bitcoind(bitcoinClient)) => new FallbackFeeProvider(new BitcoinCoreFeeProvider(bitcoinClient, defaultFeerates) :: new ConstantFeeProvider(defaultFeerates) :: Nil, minFeeratePerByte) // order matters!
+        case (_, Bitcoind(bitcoinClient)) => new FallbackFeeProvider(new SmoothFeeProvider(new BitcoinCoreFeeProvider(bitcoinClient, defaultFeerates), smoothFeerateWindow) :: new ConstantFeeProvider(defaultFeerates) :: Nil, minFeeratePerByte) // order matters!
         case _ => new FallbackFeeProvider(new ConstantFeeProvider(defaultFeerates) :: Nil, minFeeratePerByte) // order matters!
       }
       _ = system.scheduler.schedule(0 seconds, 10 minutes)(feeProvider.getFeerates.map {
@@ -162,6 +166,7 @@ class Setup(datadir: File, overrideDefaults: Config = ConfigFactory.empty(), act
         case address => logger.info(s"initial wallet address=$address")
       }
 
+      audit = system.actorOf(SimpleSupervisor.props(Auditor.props(nodeParams), "auditor", SupervisorStrategy.Resume))
       paymentHandler = system.actorOf(SimpleSupervisor.props(config.getString("payment-handler") match {
         case "local" => LocalPaymentHandler.props(nodeParams)
         case "noop" => Props[NoopPaymentHandler]
@@ -224,6 +229,14 @@ class Setup(datadir: File, overrideDefaults: Config = ConfigFactory.empty(), act
       }
     } yield kit
 
+  }
+
+  private def await[T](awaitable: Awaitable[T], atMost: Duration, messageOnTimeout: => String): T = try {
+    Await.result(awaitable, atMost)
+  } catch {
+    case e: TimeoutException =>
+      logger.error(messageOnTimeout)
+      throw e
   }
 
 }

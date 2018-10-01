@@ -22,6 +22,7 @@ import java.sql.DriverManager
 import fr.acinq.bitcoin.Crypto.PrivateKey
 import fr.acinq.bitcoin.{BinaryData, Block, Script}
 import fr.acinq.eclair.NodeParams.BITCOIND
+import fr.acinq.eclair.TestConstants.Alice.sqlite
 import fr.acinq.eclair.crypto.LocalKeyManager
 import fr.acinq.eclair.db.sqlite._
 import fr.acinq.eclair.io.Peer
@@ -51,7 +52,7 @@ object TestConstants {
       publicAddresses = new InetSocketAddress("localhost", 9731) :: Nil,
       globalFeatures = "",
       localFeatures = "00",
-      dustLimitSatoshis = 546,
+      dustLimitSatoshis = 1100,
       maxHtlcValueInFlightMsat = UInt64(150000000),
       maxAcceptedHtlcs = 100,
       expiryDeltaBlocks = 144,
@@ -69,6 +70,7 @@ object TestConstants {
       networkDb = new SqliteNetworkDb(sqlite),
       pendingRelayDb = new SqlitePendingRelayDb(sqlite),
       paymentsDb = new SqlitePaymentsDb(sqlite),
+      auditDb = new SqliteAuditDb(sqlite),
       routerBroadcastInterval = 60 seconds,
       pingInterval = 30 seconds,
       maxFeerateMismatch = 1.5,
@@ -123,6 +125,7 @@ object TestConstants {
       networkDb = new SqliteNetworkDb(sqlite),
       pendingRelayDb = new SqlitePendingRelayDb(sqlite),
       paymentsDb = new SqlitePaymentsDb(sqlite),
+      auditDb = new SqliteAuditDb(sqlite),
       routerBroadcastInterval = 60 seconds,
       pingInterval = 30 seconds,
       maxFeerateMismatch = 1.0,

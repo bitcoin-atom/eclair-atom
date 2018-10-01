@@ -24,6 +24,7 @@ import fr.acinq.eclair.TestConstants.{Alice, Bob}
 import fr.acinq.eclair.UInt64.Conversions._
 import fr.acinq.eclair.blockchain._
 import fr.acinq.eclair.blockchain.fee.FeeratesPerKw
+import fr.acinq.eclair.channel.Channel.TickRefreshChannelUpdate
 import fr.acinq.eclair.channel.states.StateTestsHelperMethods
 import fr.acinq.eclair.channel.{Data, State, _}
 import fr.acinq.eclair.payment._
@@ -114,20 +115,7 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       val add = CMD_ADD_HTLC(500000000, "11" * 42, expiry = 400144)
       sender.send(alice, add)
       val error = InvalidPaymentHash(channelId(alice))
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
-      alice2bob.expectNoMsg(200 millis)
-    }
-  }
-
-  test("recv CMD_ADD_HTLC (expiry in the past)") { case (alice, _, alice2bob, _, _, _, _) =>
-    within(30 seconds) {
-      val sender = TestProbe()
-      val initialState = alice.stateData.asInstanceOf[DATA_NORMAL]
-      val currentBlockCount = Globals.blockCount.get
-      val add = CMD_ADD_HTLC(500000000, "11" * 32, expiry = 1)
-      sender.send(alice, add)
-      val error = ExpiryCannotBeInThePast(channelId(alice), 1, currentBlockCount)
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
+      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate), Some(add))))
       alice2bob.expectNoMsg(200 millis)
     }
   }
@@ -140,8 +128,8 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       val expiryTooSmall = currentBlockCount + 3
       val add = CMD_ADD_HTLC(500000000, "11" * 32, expiry = expiryTooSmall)
       sender.send(alice, add)
-      val error = ExpiryTooSmall(channelId(alice), minimum = currentBlockCount + Channel.MIN_CLTV_EXPIRY, actual = expiryTooSmall, blockCount = currentBlockCount)
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
+      val error = ExpiryTooSmall(channelId(alice), currentBlockCount + Channel.MIN_CLTV_EXPIRY, expiryTooSmall, currentBlockCount)
+      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate), Some(add))))
       alice2bob.expectNoMsg(200 millis)
     }
   }
@@ -155,7 +143,7 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       val add = CMD_ADD_HTLC(500000000, "11" * 32, expiry = expiryTooBig)
       sender.send(alice, add)
       val error = ExpiryTooBig(channelId(alice), maximum = currentBlockCount + Channel.MAX_CLTV_EXPIRY, actual = expiryTooBig, blockCount = currentBlockCount)
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
+      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate), Some(add))))
       alice2bob.expectNoMsg(200 millis)
     }
   }
@@ -167,7 +155,7 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       val add = CMD_ADD_HTLC(50, "11" * 32, 400144)
       sender.send(alice, add)
       val error = HtlcValueTooSmall(channelId(alice), 1000, 50)
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
+      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate), Some(add))))
       alice2bob.expectNoMsg(200 millis)
     }
   }
@@ -179,7 +167,7 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       val add = CMD_ADD_HTLC(Int.MaxValue, "11" * 32, 400144)
       sender.send(alice, add)
       val error = InsufficientFunds(channelId(alice), amountMsat = Int.MaxValue, missingSatoshis = 1376443, reserveSatoshis = 20000, feesSatoshis = 8960)
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
+      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate), Some(add))))
       alice2bob.expectNoMsg(200 millis)
     }
   }
@@ -200,7 +188,7 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       val add = CMD_ADD_HTLC(1000000, "44" * 32, 400144)
       sender.send(alice, add)
       val error = InsufficientFunds(channelId(alice), amountMsat = 1000000, missingSatoshis = 1000, reserveSatoshis = 20000, feesSatoshis = 12400)
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
+      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate), Some(add))))
       alice2bob.expectNoMsg(200 millis)
     }
   }
@@ -218,7 +206,7 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       val add = CMD_ADD_HTLC(500000000, "33" * 32, 400144)
       sender.send(alice, add)
       val error = InsufficientFunds(channelId(alice), amountMsat = 500000000, missingSatoshis = 332400, reserveSatoshis = 20000, feesSatoshis = 12400)
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
+      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate), Some(add))))
       alice2bob.expectNoMsg(200 millis)
     }
   }
@@ -230,7 +218,7 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       val add = CMD_ADD_HTLC(151000000, "11" * 32, 400144)
       sender.send(bob, add)
       val error = HtlcValueTooHighInFlight(channelId(bob), maximum = 150000000, actual = 151000000)
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(bob), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
+      sender.expectMsg(Failure(AddHtlcFailed(channelId(bob), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate), Some(add))))
       bob2alice.expectNoMsg(200 millis)
     }
   }
@@ -248,7 +236,7 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       val add = CMD_ADD_HTLC(10000000, "33" * 32, 400144)
       sender.send(alice, add)
       val error = TooManyAcceptedHtlcs(channelId(alice), maximum = 30)
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
+      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate), Some(add))))
       alice2bob.expectNoMsg(200 millis)
     }
   }
@@ -268,7 +256,7 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       val add2 = CMD_ADD_HTLC(TestConstants.fundingSatoshis * 2 / 3 * 1000, "22" * 32, 400144)
       sender.send(alice, add2)
       val error = InsufficientFunds(channelId(alice), add2.amountMsat, 564012, 20000, 10680)
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add2.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
+      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add2.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate), Some(add2))))
       alice2bob.expectNoMsg(200 millis)
     }
   }
@@ -286,7 +274,7 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       val add = CMD_ADD_HTLC(500000000, "11" * 32, expiry = 400144)
       sender.send(alice, add)
       val error = NoMoreHtlcsClosingInProgress(channelId(alice))
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
+      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate), Some(add))))
       alice2bob.expectNoMsg(200 millis)
     }
   }
@@ -311,7 +299,7 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       bob2alice.forward(alice)
       sender.send(alice, add2)
       val error = NoMoreHtlcsClosingInProgress(channelId(alice))
-      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add2.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate))))
+      sender.expectMsg(Failure(AddHtlcFailed(channelId(alice), add2.paymentHash, error, Local(Some(sender.ref)), Some(initialState.channelUpdate), Some(add2))))
     }
   }
 
@@ -349,53 +337,6 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       alice2bob.forward(bob, htlc)
       val error = bob2alice.expectMsgType[Error]
       assert(new String(error.data) === InvalidPaymentHash(channelId(bob)).getMessage)
-      awaitCond(bob.stateName == CLOSING)
-      bob2blockchain.expectMsg(PublishAsap(tx))
-      bob2blockchain.expectMsgType[PublishAsap]
-      bob2blockchain.expectMsgType[WatchConfirmed]
-    }
-  }
-
-  test("recv UpdateAddHtlc (expiry in the past)") { case (_, bob, alice2bob, bob2alice, _, bob2blockchain, _) =>
-    within(30 seconds) {
-      val tx = bob.stateData.asInstanceOf[DATA_NORMAL].commitments.localCommit.publishableTxs.commitTx.tx
-      val currentBlockCount = Globals.blockCount.get
-      val htlc = UpdateAddHtlc("00" * 32, 0, 150000, BinaryData("42" * 32), expiry = 1, defaultOnion)
-      alice2bob.forward(bob, htlc)
-      val error = bob2alice.expectMsgType[Error]
-      assert(new String(error.data) === ExpiryCannotBeInThePast(channelId(bob), expiry = 1, blockCount = currentBlockCount).getMessage)
-      awaitCond(bob.stateName == CLOSING)
-      bob2blockchain.expectMsg(PublishAsap(tx))
-      bob2blockchain.expectMsgType[PublishAsap]
-      bob2blockchain.expectMsgType[WatchConfirmed]
-    }
-  }
-
-  test("recv UpdateAddHtlc (expiry too small)") { case (_, bob, alice2bob, bob2alice, _, bob2blockchain, _) =>
-    within(30 seconds) {
-      val tx = bob.stateData.asInstanceOf[DATA_NORMAL].commitments.localCommit.publishableTxs.commitTx.tx
-      val currentBlockCount = Globals.blockCount.get
-      val expiryTooSmall = currentBlockCount + 3
-      val htlc = UpdateAddHtlc("00" * 32, 0, 150000, BinaryData("42" * 32), expiry = expiryTooSmall, defaultOnion)
-      alice2bob.forward(bob, htlc)
-      val error = bob2alice.expectMsgType[Error]
-      assert(new String(error.data) === ExpiryTooSmall(channelId(bob), minimum = currentBlockCount + Channel.MIN_CLTV_EXPIRY, actual = expiryTooSmall, blockCount = currentBlockCount).getMessage)
-      awaitCond(bob.stateName == CLOSING)
-      bob2blockchain.expectMsg(PublishAsap(tx))
-      bob2blockchain.expectMsgType[PublishAsap]
-      bob2blockchain.expectMsgType[WatchConfirmed]
-    }
-  }
-
-  test("recv UpdateAddHtlc (expiry too big)") { case (_, bob, alice2bob, bob2alice, _, bob2blockchain, _) =>
-    within(30 seconds) {
-      val tx = bob.stateData.asInstanceOf[DATA_NORMAL].commitments.localCommit.publishableTxs.commitTx.tx
-      val currentBlockCount = Globals.blockCount.get
-      val expiryTooBig = currentBlockCount + Channel.MAX_CLTV_EXPIRY + 1
-      val htlc = UpdateAddHtlc("00" * 32, 0, 150000, BinaryData("42" * 32), expiry = expiryTooBig, defaultOnion)
-      alice2bob.forward(bob, htlc)
-      val error = bob2alice.expectMsgType[Error]
-      assert(new String(error.data) === ExpiryTooBig(channelId(bob), maximum = currentBlockCount + Channel.MAX_CLTV_EXPIRY, actual = expiryTooBig, blockCount = currentBlockCount).getMessage)
       awaitCond(bob.stateName == CLOSING)
       bob2blockchain.expectMsg(PublishAsap(tx))
       bob2blockchain.expectMsgType[PublishAsap]
@@ -566,7 +507,7 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       val commitSig = alice2bob.expectMsgType[CommitSig]
       assert(commitSig.htlcSignatures.toSet.size == htlcCount)
       alice2bob.forward(bob)
-      awaitCond(bob.stateData.asInstanceOf[DATA_NORMAL].commitments.localCommit.publishableTxs.htlcTxsAndSigs.size ==  htlcCount)
+      awaitCond(bob.stateData.asInstanceOf[DATA_NORMAL].commitments.localCommit.publishableTxs.htlcTxsAndSigs.size == htlcCount)
       val htlcTxs = bob.stateData.asInstanceOf[DATA_NORMAL].commitments.localCommit.publishableTxs.htlcTxsAndSigs
       val amounts = htlcTxs.map(_.txinfo.tx.txOut.head.amount.toLong)
       assert(amounts === amounts.sorted)
@@ -1270,6 +1211,22 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
     }
   }
 
+  test("recv CMD_UPDATE_FEE (two in a row)") { case (alice, _, alice2bob, _, _, _, _) =>
+    within(30 seconds) {
+      val sender = TestProbe()
+      val initialState = alice.stateData.asInstanceOf[DATA_NORMAL]
+      sender.send(alice, CMD_UPDATE_FEE(20000))
+      sender.expectMsg("ok")
+      val fee1 = alice2bob.expectMsgType[UpdateFee]
+      sender.send(alice, CMD_UPDATE_FEE(30000))
+      sender.expectMsg("ok")
+      val fee2 = alice2bob.expectMsgType[UpdateFee]
+      awaitCond(alice.stateData == initialState.copy(
+        commitments = initialState.commitments.copy(
+          localChanges = initialState.commitments.localChanges.copy(initialState.commitments.localChanges.proposed :+ fee2))))
+    }
+  }
+
   test("recv CMD_UPDATE_FEE (when fundee)") { case (_, bob, _, _, _, _, _) =>
     within(30 seconds) {
       val sender = TestProbe()
@@ -1281,6 +1238,17 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
   }
 
   test("recv UpdateFee") { case (_, bob, _, _, _, _, _) =>
+    within(30 seconds) {
+      val initialData = bob.stateData.asInstanceOf[DATA_NORMAL]
+      val fee1 = UpdateFee("00" * 32, 12000)
+      bob ! fee1
+      val fee2 = UpdateFee("00" * 32, 14000)
+      bob ! fee2
+      awaitCond(bob.stateData == initialData.copy(commitments = initialData.commitments.copy(remoteChanges = initialData.commitments.remoteChanges.copy(proposed = initialData.commitments.remoteChanges.proposed :+ fee2), remoteNextHtlcId = 0)))
+    }
+  }
+
+  test("recv UpdateFee (two in a row)") { case (_, bob, _, _, _, _, _) =>
     within(30 seconds) {
       val initialData = bob.stateData.asInstanceOf[DATA_NORMAL]
       val fee = UpdateFee("00" * 32, 12000)
@@ -1352,6 +1320,21 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       bob2blockchain.expectMsg(PublishAsap(tx))
       bob2blockchain.expectMsgType[PublishAsap]
       bob2blockchain.expectMsgType[WatchConfirmed]
+    }
+  }
+
+  test("recv CMD_UPDATE_RELAY_FEE ") { case (alice, bob, alice2bob, bob2alice, _, _, relayer) =>
+    within(30 seconds) {
+      val sender = TestProbe()
+      val newFeeBaseMsat = TestConstants.Alice.nodeParams.feeBaseMsat * 2
+      val newFeeProportionalMillionth = TestConstants.Alice.nodeParams.feeProportionalMillionth * 2
+      sender.send(alice, CMD_UPDATE_RELAY_FEE(newFeeBaseMsat, newFeeProportionalMillionth))
+      sender.expectMsg("ok")
+
+      val localUpdate = relayer.expectMsgType[LocalChannelUpdate]
+      assert(localUpdate.channelUpdate.feeBaseMsat == newFeeBaseMsat)
+      assert(localUpdate.channelUpdate.feeProportionalMillionths == newFeeProportionalMillionth)
+      relayer.expectNoMsg(1 seconds)
     }
   }
 
@@ -2038,6 +2021,43 @@ class NormalStateSpec extends TestkitBaseClass with StateTestsHelperMethods {
       bob2alice.send(alice, annSigsA)
       // alice re-sends her sigs
       alice2bob.expectMsg(annSigsA)
+    }
+  }
+
+  test("recv TickRefreshChannelUpdate", Tag("channels_public")) { case (alice, bob, _, bob2alice, _, _, relayer) =>
+    within(30 seconds) {
+      val sender = TestProbe()
+      sender.send(alice, WatchEventConfirmed(BITCOIN_FUNDING_DEEPLYBURIED, 400000, 42))
+      sender.send(bob, WatchEventConfirmed(BITCOIN_FUNDING_DEEPLYBURIED, 400000, 42))
+      bob2alice.expectMsgType[AnnouncementSignatures]
+      bob2alice.forward(alice)
+      val update1 = relayer.expectMsgType[LocalChannelUpdate]
+
+      // actual test starts here
+      Thread.sleep(1100)
+      sender.send(alice, TickRefreshChannelUpdate)
+      val update2 = relayer.expectMsgType[LocalChannelUpdate]
+      assert(update1.channelUpdate.timestamp < update2.channelUpdate.timestamp)
+    }
+  }
+
+  test("recv INPUT_DISCONNECTED", Tag("channels_public")) { case (alice, bob, _, bob2alice, _, _, relayer) =>
+    within(30 seconds) {
+      val sender = TestProbe()
+      sender.send(alice, WatchEventConfirmed(BITCOIN_FUNDING_DEEPLYBURIED, 400000, 42))
+      sender.send(bob, WatchEventConfirmed(BITCOIN_FUNDING_DEEPLYBURIED, 400000, 42))
+      bob2alice.expectMsgType[AnnouncementSignatures]
+      bob2alice.forward(alice)
+      val update1 = relayer.expectMsgType[LocalChannelUpdate]
+      assert(Announcements.isEnabled(update1.channelUpdate.flags) == true)
+
+      // actual test starts here
+      Thread.sleep(1100)
+      sender.send(alice, INPUT_DISCONNECTED)
+      val update2 = relayer.expectMsgType[LocalChannelUpdate]
+      assert(update1.channelUpdate.timestamp < update2.channelUpdate.timestamp)
+      assert(Announcements.isEnabled(update2.channelUpdate.flags) == false)
+      awaitCond(alice.stateName == OFFLINE)
     }
   }
 
