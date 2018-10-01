@@ -41,8 +41,8 @@ trait BitcoindService extends Logging {
   val INTEGRATION_TMP_DIR = s"${System.getProperty("buildDirectory")}/integration-${UUID.randomUUID().toString}"
   logger.info(s"using tmp dir: $INTEGRATION_TMP_DIR")
 
-  val PATH_BITCOIND = new File(System.getProperty("buildDirectory"), "bitcoin-0.16.0/bin/bitcoind")
-  val PATH_BITCOIND_DATADIR = new File(INTEGRATION_TMP_DIR, "datadir-bitcoin")
+  val PATH_BITCOIND = new File(System.getProperty("buildDirectory"), "atom-0.16.0/bin/atomd")
+  val PATH_BITCOIND_DATADIR = new File(INTEGRATION_TMP_DIR, "datadir-atom")
 
   var bitcoind: Process = null
   var bitcoinrpcclient: BitcoinJsonRPCClient = null
@@ -52,8 +52,8 @@ trait BitcoindService extends Logging {
 
   def startBitcoind(): Unit = {
     Files.createDirectories(PATH_BITCOIND_DATADIR.toPath)
-    if (!Files.exists(new File(PATH_BITCOIND_DATADIR.toString, "bitcoin.conf").toPath)) {
-      Files.copy(classOf[IntegrationSpec].getResourceAsStream("/integration/bitcoin.conf"), new File(PATH_BITCOIND_DATADIR.toString, "bitcoin.conf").toPath, StandardCopyOption.REPLACE_EXISTING)
+    if (!Files.exists(new File(PATH_BITCOIND_DATADIR.toString, "atom.conf").toPath)) {
+      Files.copy(classOf[IntegrationSpec].getResourceAsStream("/integration/atom.conf"), new File(PATH_BITCOIND_DATADIR.toString, "bitcoin.conf").toPath, StandardCopyOption.REPLACE_EXISTING)
     }
 
     bitcoind = s"$PATH_BITCOIND -datadir=$PATH_BITCOIND_DATADIR".run()

@@ -30,7 +30,7 @@ class ChannelException(val channelId: BinaryData, message: String) extends Runti
 // @formatter:off
 case class DebugTriggeredException             (override val channelId: BinaryData) extends ChannelException(channelId, "debug-mode triggered failure")
 case class InvalidChainHash                    (override val channelId: BinaryData, local: BinaryData, remote: BinaryData) extends ChannelException(channelId, s"invalid chainHash (local=$local remote=$remote)")
-case class InvalidFundingAmount                (override val channelId: BinaryData, fundingSatoshis: Long, min: Long, max: Long) extends ChannelException(channelId, s"invalid funding_satoshis=$fundingSatoshis (min=$min max=$max)")
+case class InvalidFundingAmount                (override val channelId: BinaryData, fundingSatoshis: Long, min: Long) extends ChannelException(channelId, s"invalid funding_satoshis=$fundingSatoshis (min=$min)")
 case class InvalidPushAmount                   (override val channelId: BinaryData, pushMsat: Long, max: Long) extends ChannelException(channelId, s"invalid pushMsat=$pushMsat (max=$max)")
 case class InvalidMaxAcceptedHtlcs             (override val channelId: BinaryData, maxAcceptedHtlcs: Int, max: Int) extends ChannelException(channelId, s"invalid max_accepted_htlcs=$maxAcceptedHtlcs (max=$max)")
 case class DustLimitTooSmall                   (override val channelId: BinaryData, dustLimitSatoshis: Long, min: Long) extends ChannelException(channelId, s"dustLimitSatoshis=$dustLimitSatoshis is too small (min=$min)")

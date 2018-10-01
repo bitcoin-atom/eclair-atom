@@ -363,23 +363,6 @@ trait Service extends Logging {
 
   def getInfoResponse: Future[GetInfoResponse]
 
-  def makeSocketHandler(system: ActorSystem)(implicit materializer: ActorMaterializer): Flow[Message, TextMessage.Strict, NotUsed] = {
-
-    // create a flow transforming a queue of string -> string
-    val (flowInput, flowOutput) = Source.queue[String](10, OverflowStrategy.dropTail).toMat(BroadcastHub.sink[String])(Keep.both).run()
-
-    // register an actor that feeds the queue when a payment is received
-    system.actorOf(Props(new Actor {
-      override def preStart: Unit = context.system.eventStream.subscribe(self, classOf[PaymentReceived])
-      def receive: Receive = { case received: PaymentReceived => flowInput.offer(received.paymentHash.toString) }
-    }))
-
-    Flow[Message]
-      .mapConcat(_ => Nil) // Ignore heartbeats and other data from the client
-      .merge(flowOutput) // Stream the data we want to the client
-      .map(TextMessage.apply)
-  }
-
   def help = List(
     "connect (uri): open a secure connection to a lightning node",
     "connect (nodeId, host, port): open a secure connection to a lightning node",
