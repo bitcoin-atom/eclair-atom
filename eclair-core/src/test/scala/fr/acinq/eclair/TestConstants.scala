@@ -21,7 +21,7 @@ import java.sql.DriverManager
 
 import fr.acinq.bitcoin.Crypto.PrivateKey
 import fr.acinq.bitcoin.{BinaryData, Block, Script}
-import fr.acinq.eclair.NodeParams.BITCOIND
+import fr.acinq.eclair.NodeParams.ATOMD
 import fr.acinq.eclair.TestConstants.Alice.sqlite
 import fr.acinq.eclair.crypto.LocalKeyManager
 import fr.acinq.eclair.db.sqlite._
@@ -79,7 +79,7 @@ object TestConstants {
       chainHash = Block.BCARegtestForkBlockHash,
       channelFlags = 1,
       channelExcludeDuration = 5 seconds,
-      watcherType = BITCOIND,
+      watcherType = ATOMD,
       paymentRequestExpiry = 1 hour,
       maxPendingPaymentRequests = 10000000,
       maxPaymentFee = 0.03,
@@ -134,7 +134,7 @@ object TestConstants {
       chainHash = Block.BCARegtestForkBlockHash,
       channelFlags = 1,
       channelExcludeDuration = 5 seconds,
-      watcherType = BITCOIND,
+      watcherType = ATOMD,
       paymentRequestExpiry = 1 hour,
       maxPendingPaymentRequests = 10000000,
       maxPaymentFee = 0.03,

@@ -84,7 +84,7 @@ object NodeParams {
 
   sealed trait WatcherType
 
-  object BITCOIND extends WatcherType
+  object ATOMD extends WatcherType
 
   /**
     * Order of precedence for the configuration parameters:
@@ -146,7 +146,7 @@ object NodeParams {
     require(color.size == 3, "color should be a 3-bytes hex buffer")
 
     val watcherType = config.getString("watcher-type") match {
-      case _ => BITCOIND
+      case _ => ATOMD
     }
 
     val dustLimitSatoshis = config.getLong("dust-limit-satoshis")

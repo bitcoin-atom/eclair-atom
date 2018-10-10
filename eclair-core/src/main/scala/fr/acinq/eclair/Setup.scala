@@ -26,7 +26,7 @@ import akka.stream.{ActorMaterializer, BindFailedException}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import fr.acinq.bitcoin.{BinaryData, Block}
-import fr.acinq.eclair.NodeParams.BITCOIND
+import fr.acinq.eclair.NodeParams.ATOMD
 import fr.acinq.eclair.api.{GetInfoResponse, Service}
 import fr.acinq.eclair.blockchain.bitcoind.rpc.{BasicBitcoinJsonRPCClient, BatchingBitcoinJsonRPCClient, ExtendedBitcoinClient}
 import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor
@@ -86,7 +86,7 @@ class Setup(datadir: File,
   implicit val ec = ExecutionContext.Implicits.global
 
   val bitcoin = nodeParams.watcherType match {
-    case BITCOIND =>
+    case ATOMD =>
       val bitcoinClient = new BasicBitcoinJsonRPCClient(
         user = config.getString("bitcoind.rpcuser"),
         password = config.getString("bitcoind.rpcpassword"),
@@ -99,8 +99,8 @@ class Setup(datadir: File,
         progress = (json \ "verificationprogress").extract[Double]
         blocks = (json \ "blocks").extract[Long]
         headers = (json \ "headers").extract[Long]
-        chainHash <- bitcoinClient.invoke("getblockhash", 0).map(_.extract[String]).map(BinaryData(_)).map(x => BinaryData(x.reverse))
-        bitcoinVersion <- bitcoinClient.invoke("getnetworkinfo").map(json => (json \ "version")).map(_.extract[String])
+        chainHash <- bitcoinClient.invoke("getblockhash", 505888).map(_.extract[String]).map(BinaryData.apply)
+        bitcoinVersion <- bitcoinClient.invoke("getnetworkinfo").map(_ \ "version").map(_.extract[String])
         unspentAddresses <- bitcoinClient.invoke("listunspent").collect { case JArray(values) =>
           values
             .filter(value => (value \ "spendable").extract[Boolean])
