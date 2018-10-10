@@ -42,7 +42,7 @@ import javafx.util.{Callback, Duration}
 
 import com.google.common.net.HostAndPort
 import fr.acinq.bitcoin.{MilliSatoshi, Satoshi}
-import fr.acinq.eclair.NodeParams.BITCOIND
+import fr.acinq.eclair.NodeParams.ATOMD
 import fr.acinq.eclair.{CoinUtils, Setup}
 import fr.acinq.eclair.gui.stages._
 import fr.acinq.eclair.gui.utils.{ContextMenuUtils, CopyAction}
@@ -359,7 +359,7 @@ class MainController(val handlers: Handlers, val hostServices: HostServices) ext
     labelServer.setText(s"${setup.config.getInt("server.port")}")
 
     val wallet = setup.nodeParams.watcherType match {
-      case BITCOIND => "Atom-core"
+      case ATOMD => "Atom-core"
     }
     bitcoinWallet.setText(wallet)
     bitcoinChain.setText(s"${setup.chain.toUpperCase()}")

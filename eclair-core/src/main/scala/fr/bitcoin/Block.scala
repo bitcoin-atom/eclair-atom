@@ -112,7 +112,7 @@ object Block extends BtcSerializer[Block] {
 
   val SegnetGenesisBlock = LivenetGenesisBlock.copy(header = LivenetGenesisBlock.header.copy(bits = 503447551, time = 1452831101, nonce = 0))
 
-  val BCATestnetForkBlockHash = BinaryData("00000099df3f94c286e781f00810923653de9363454ddf55c6957c0d2bb085f0")
+  val BCATestnetForkBlockHash = BinaryData("00000000008ce3262e70f532289279912291255c3c17624156bdb3f4e7258bec")
 
   val BCARegtestForkBlockHash = BinaryData("25e97734d280bbb9cde52e7daa9d539f21d556b81a0c7dd43b6930bf857a412d")
 
