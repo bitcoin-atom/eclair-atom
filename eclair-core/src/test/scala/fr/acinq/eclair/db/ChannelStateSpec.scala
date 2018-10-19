@@ -107,7 +107,7 @@ object ChannelStateSpec {
     remoteNextCommitInfo = Right(randomKey.publicKey),
     commitInput = commitmentInput, remotePerCommitmentSecrets = ShaChain.init, channelId = "00" * 32)
 
-  val channelUpdate = Announcements.makeChannelUpdate("11" * 32, randomKey, randomKey.publicKey, ShortChannelId(142553), 42, 15, 575, 53)
+  val channelUpdate = Announcements.makeChannelUpdate("11" * 32, randomKey, randomKey.publicKey, ShortChannelId(142553), 42, 15, 575, 53, 10000000L * 1000L)
 
   val normal = DATA_NORMAL(commitments, ShortChannelId(42), true, None, channelUpdate, None, None)
 }
