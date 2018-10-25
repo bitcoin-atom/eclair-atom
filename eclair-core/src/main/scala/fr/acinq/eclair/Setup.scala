@@ -125,7 +125,8 @@ class Setup(datadir: File,
     for {
       _ <- Future.successful(true)
       feeratesRetrieved = Promise[Boolean]()
-      zmqConnected = Promise[Boolean]()
+      zmqBlockConnected = Promise[Boolean]()
+      zmqTxConnected = Promise[Boolean]()
       tcpBound = Promise[Unit]()
 
       defaultFeerates = FeeratesPerKB(
@@ -155,7 +156,8 @@ class Setup(datadir: File,
 
       watcher = bitcoin match {
         case Bitcoind(bitcoinClient) =>
-          system.actorOf(SimpleSupervisor.props(Props(new ZMQActor(config.getString("bitcoind.zmq"), Some(zmqConnected))), "zmq", SupervisorStrategy.Restart))
+          system.actorOf(SimpleSupervisor.props(Props(new ZMQActor(config.getString("bitcoind.zmqblock"), Some(zmqBlockConnected))), "zmqblock", SupervisorStrategy.Restart))
+          system.actorOf(SimpleSupervisor.props(Props(new ZMQActor(config.getString("bitcoind.zmqtx"), Some(zmqTxConnected))), "zmqtx", SupervisorStrategy.Restart))
           system.actorOf(SimpleSupervisor.props(ZmqWatcher.props(new ExtendedBitcoinClient(new BatchingBitcoinJsonRPCClient(bitcoinClient))), "watcher", SupervisorStrategy.Resume))
       }
 
@@ -192,10 +194,12 @@ class Setup(datadir: File,
         server = server,
         wallet = wallet)
 
-      zmqTimeout = after(5 seconds, using = system.scheduler)(Future.failed(BitcoinZMQConnectionTimeoutException))
+      zmqBlockTimeout = after(5 seconds, using = system.scheduler)(Future.failed(BitcoinZMQConnectionTimeoutException))
+      zmqTxTimeout = after(5 seconds, using = system.scheduler)(Future.failed(BitcoinZMQConnectionTimeoutException))
       tcpTimeout = after(5 seconds, using = system.scheduler)(Future.failed(TCPBindException(config.getInt("server.port"))))
 
-      _ <- Future.firstCompletedOf(zmqConnected.future :: zmqTimeout :: Nil)
+      _ <- Future.firstCompletedOf(zmqBlockConnected.future :: zmqBlockTimeout :: Nil)
+      _ <- Future.firstCompletedOf(zmqTxConnected.future :: zmqTxTimeout :: Nil)
       _ <- Future.firstCompletedOf(tcpBound.future :: tcpTimeout :: Nil)
       _ <- if (config.getBoolean("api.enabled")) {
         logger.info(s"json-rpc api enabled on port=${config.getInt("api.port")}")
