@@ -82,10 +82,11 @@ name                         | description                                      
  eclair.api.enabled          | Enable/disable the API                                                                | false. By default the API is disabled. If you want to enable it, you must set a password.
  eclair.api.port             | API HTTP port                                                                         | 8180
  eclair.api.password         | API password (BASIC)                                                                  | "" (must be set if the API is enabled)
- eclair.bitcoind.rpcuser     | Atom Core RPC user                                                                    | foo
- eclair.bitcoind.rpcpassword | Atom Core RPC password                                                                | bar
- eclair.bitcoind.zmq         | Atom Core ZMQ address                                                                 | "tcp://127.0.0.1:29001"
- eclair.gui.unit             | Unit in which amounts are displayed (possible values: msat, sat, mBCA, BCA)           | BCA 
+ eclair.bitcoind.rpcuser     | Bitcoin Core RPC user                                                                 | foo
+ eclair.bitcoind.rpcpassword | Bitcoin Core RPC password                                                             | bar
+ eclair.bitcoind.zmqblock    | Bitcoin Core ZMQ block address                                                        | "tcp://127.0.0.1:29001"
+ eclair.bitcoind.zmqtx       | Bitcoin Core ZMQ tx address                                                           | "tcp://127.0.0.1:29001"
+ eclair.gui.unit             | Unit in which amounts are displayed (possible values: msat, sat, mbtc, btc)           | btc
 
 Quotes are not required unless the value contains special characters. Full syntax guide [here](https://github.com/lightbend/config/blob/master/HOCON.md).
 

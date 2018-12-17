@@ -24,16 +24,14 @@ import fr.acinq.eclair.payment.{Local, Relayed}
 import fr.acinq.eclair.transactions._
 import fr.acinq.eclair.wire.ChannelCodecs._
 import fr.acinq.eclair.{UInt64, randomKey}
-import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
 
 import scala.util.Random
 
 /**
   * Created by PM on 31/05/2016.
   */
-@RunWith(classOf[JUnitRunner])
+
 class ChannelCodecsSpec extends FunSuite {
 
   def randomBytes(size: Int): BinaryData = {
@@ -106,7 +104,7 @@ class ChannelCodecsSpec extends FunSuite {
       channelId = randomBytes(32),
       id = Random.nextInt(Int.MaxValue),
       amountMsat = Random.nextInt(Int.MaxValue),
-      expiry = Random.nextInt(Int.MaxValue),
+      cltvExpiry = Random.nextInt(Int.MaxValue),
       paymentHash = randomBytes(32),
       onionRoutingPacket = randomBytes(Sphinx.PacketLength))
     val htlc1 = DirectedHtlc(direction = IN, add = add)
@@ -120,14 +118,14 @@ class ChannelCodecsSpec extends FunSuite {
       channelId = randomBytes(32),
       id = Random.nextInt(Int.MaxValue),
       amountMsat = Random.nextInt(Int.MaxValue),
-      expiry = Random.nextInt(Int.MaxValue),
+      cltvExpiry = Random.nextInt(Int.MaxValue),
       paymentHash = randomBytes(32),
       onionRoutingPacket = randomBytes(Sphinx.PacketLength))
     val add2 = UpdateAddHtlc(
       channelId = randomBytes(32),
       id = Random.nextInt(Int.MaxValue),
       amountMsat = Random.nextInt(Int.MaxValue),
-      expiry = Random.nextInt(Int.MaxValue),
+      cltvExpiry = Random.nextInt(Int.MaxValue),
       paymentHash = randomBytes(32),
       onionRoutingPacket = randomBytes(Sphinx.PacketLength))
     val htlc1 = DirectedHtlc(direction = IN, add = add1)

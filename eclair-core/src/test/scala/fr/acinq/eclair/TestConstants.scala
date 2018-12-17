@@ -22,7 +22,6 @@ import java.sql.DriverManager
 import fr.acinq.bitcoin.Crypto.PrivateKey
 import fr.acinq.bitcoin.{BinaryData, Block, Script}
 import fr.acinq.eclair.NodeParams.ATOMD
-import fr.acinq.eclair.TestConstants.Alice.sqlite
 import fr.acinq.eclair.crypto.LocalKeyManager
 import fr.acinq.eclair.db.sqlite._
 import fr.acinq.eclair.io.Peer
@@ -71,6 +70,7 @@ object TestConstants {
       pendingRelayDb = new SqlitePendingRelayDb(sqlite),
       paymentsDb = new SqlitePaymentsDb(sqlite),
       auditDb = new SqliteAuditDb(sqlite),
+      revocationTimeout = 20 seconds,
       routerBroadcastInterval = 60 seconds,
       pingInterval = 30 seconds,
       maxFeerateMismatch = 1.5,
@@ -126,6 +126,7 @@ object TestConstants {
       pendingRelayDb = new SqlitePendingRelayDb(sqlite),
       paymentsDb = new SqlitePaymentsDb(sqlite),
       auditDb = new SqliteAuditDb(sqlite),
+      revocationTimeout = 20 seconds,
       routerBroadcastInterval = 60 seconds,
       pingInterval = 30 seconds,
       maxFeerateMismatch = 1.0,
